@@ -6,18 +6,13 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // onAuthStateChange dispara INITIAL_SESSION ao inicializar —
-    // cobre tanto sessão nova quanto sessão restaurada do localStorage.
-    // Não usamos getSession() separado para evitar race condition.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
-
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         setLoading(false)
       }
     })
 
-    // Segurança: se o evento nunca disparar, desbloqueia em 4s
     const fallback = setTimeout(() => setLoading(false), 4000)
 
     return () => {
@@ -26,13 +21,15 @@ export function useAuth() {
     }
   }, [])
 
+  // Envia código OTP para o email (sem redirect — sem risco de PKCE falhar)
   const signIn = (email) =>
-    supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    })
+    supabase.auth.signInWithOtp({ email })
+
+  // Verifica o código de 6 dígitos — cria sessão persistente no mesmo browser
+  const verifyOtp = (email, token) =>
+    supabase.auth.verifyOtp({ email, token, type: 'email' })
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, loading, signIn, signOut }
+  return { user, loading, signIn, verifyOtp, signOut }
 }
