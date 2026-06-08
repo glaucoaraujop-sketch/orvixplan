@@ -136,23 +136,29 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
             Tarefas — {allTasks.length}
           </span>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            {/* Notification bell */}
-            {notify.supported && (
-              <button
-                onClick={notify.toggle}
-                title={notify.enabled ? `${notify.count} lembretes agendados` : 'Ativar lembretes'}
-                style={{
-                  minWidth: 36, minHeight: 36,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  borderRadius: 8, border: `1.5px solid ${notify.enabled ? '#4338CA' : '#E0E7FF'}`,
-                  background: notify.enabled ? '#EEF0FF' : 'white',
-                  cursor: 'pointer', fontSize: 16,
-                  color: notify.enabled ? '#4338CA' : '#9CA3AF',
-                }}
-              >
-                {notify.enabled ? '🔔' : '🔕'}
-              </button>
-            )}
+            {/* Notification bell — always visible */}
+            <button
+              onClick={notify.supported ? notify.toggle : undefined}
+              title={
+                !notify.supported
+                  ? 'Notificações indisponíveis neste dispositivo'
+                  : notify.enabled
+                    ? `${notify.count} lembrete(s) agendado(s) — toque para desativar`
+                    : 'Ativar lembretes de tarefas'
+              }
+              style={{
+                minWidth: 36, minHeight: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 8,
+                border: `1.5px solid ${notify.enabled ? '#4338CA' : '#E0E7FF'}`,
+                background: notify.enabled ? '#EEF0FF' : 'white',
+                cursor: notify.supported ? 'pointer' : 'default',
+                fontSize: 16,
+                opacity: notify.supported ? 1 : 0.4,
+              }}
+            >
+              {notify.enabled ? '🔔' : '🔕'}
+            </button>
             <button
               onClick={() => setShowForm((v) => !v)}
               style={{

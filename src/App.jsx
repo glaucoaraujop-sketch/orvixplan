@@ -28,7 +28,7 @@ export default function App() {
   const [settings,     setSettings]     = useState(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
 
-  const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal } =
+  const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, fixedTasks, addFixedTask, removeFixedTask } =
     useSupabaseStore(user?.id)
 
   const ai = useAI(settings)
@@ -239,6 +239,9 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           onSignOut={signOut}
           userEmail={user.email}
+          fixedTasks={fixedTasks}
+          addFixedTask={addFixedTask}
+          removeFixedTask={removeFixedTask}
         />
       )}
     </div>

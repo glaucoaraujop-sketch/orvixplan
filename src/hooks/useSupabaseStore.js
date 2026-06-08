@@ -188,5 +188,31 @@ export function useSupabaseStore(userId) {
     [userId, dayData],
   )
 
-  return { loading, fixedTasks, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal }
+  const addFixedTask = useCallback(
+    async (task) => {
+      const { data, error } = await supabase
+        .from('fixed_tasks')
+        .insert({
+          user_id:     userId,
+          label:       task.label,
+          pillar_key:  task.pillar,
+          time_of_day: task.time || null,
+          active:      true,
+        })
+        .select()
+        .single()
+      if (!error && data) setFixedTasks((prev) => [...prev, toTask(data, true)])
+    },
+    [userId],
+  )
+
+  const removeFixedTask = useCallback(
+    async (taskId) => {
+      await supabase.from('fixed_tasks').delete().eq('id', taskId).eq('user_id', userId)
+      setFixedTasks((prev) => prev.filter((t) => t.id !== taskId))
+    },
+    [userId],
+  )
+
+  return { loading, fixedTasks, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, addFixedTask, removeFixedTask }
 }
