@@ -10,10 +10,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image (verificação)
-        run: docker build --build-arg VITE_ANTHROPIC_KEY=test .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & Build
+        run: npm ci && npm run build
+        env:
+          VITE_ANTHROPIC_KEY: ${{ secrets.VITE_ANTHROPIC_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Trigger EasyPanel deploy
+        if: success()
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.EASYPANEL_WEBHOOK }}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.EASYPANEL_WEBHOOK }}")
+          echo "EasyPanel webhook status: $STATUS"

@@ -1,43 +1,31 @@
 -- ================================================================
--- OrvixPlan — Schema isolado no Supabase
--- Execute no Supabase SQL Editor: Database > SQL Editor > New query
+-- OrvixPlan — Schema isolado (padrão Orvix/Aivora)
+-- Projeto Supabase: Aivora | mxccbtwlolwwppvsbrlw
+--
+-- ✅ JÁ APLICADO via Claude Code MCP
+-- Este arquivo serve como referência e para recriar em caso de reset.
 -- ================================================================
 
--- 1. Criar schema exclusivo (não mistura com outros sistemas Orvix)
 CREATE SCHEMA IF NOT EXISTS orvixplan;
 
--- 2. Permissões para o PostgREST expor o schema via API
-GRANT USAGE ON SCHEMA orvixplan TO anon, authenticated;
-GRANT ALL   ON ALL TABLES    IN SCHEMA orvixplan TO anon, authenticated;
-GRANT ALL   ON ALL SEQUENCES IN SCHEMA orvixplan TO anon, authenticated;
+GRANT USAGE ON SCHEMA orvixplan TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA orvixplan
-  GRANT ALL ON TABLES    TO anon, authenticated;
+  GRANT ALL ON TABLES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA orvixplan
-  GRANT ALL ON SEQUENCES TO anon, authenticated;
-
--- ATENÇÃO: Após rodar este script, adicione "orvixplan" em:
--- Supabase Dashboard → Settings → API → DB Schema → Extra search path
--- (separe por vírgula: public, orvixplan)
-
--- ================================================================
--- EXTENSÕES
--- ================================================================
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
 
 -- ================================================================
 -- USERS
 -- ================================================================
 CREATE TABLE orvixplan.users (
-  id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  name         TEXT    NOT NULL DEFAULT 'Usuário',
+  id           UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name         TEXT        NOT NULL DEFAULT 'Usuário',
   email        TEXT,
   avatar_url   TEXT,
-  -- Configurações do planner
-  start_hour   INT     DEFAULT 6,
-  end_hour     INT     DEFAULT 23,
-  default_view TEXT    DEFAULT 'daily',
-  -- Contexto pessoal para a IA
-  ai_context   JSONB   DEFAULT '{}'::jsonb,
+  start_hour   INT         DEFAULT 6,
+  end_hour     INT         DEFAULT 23,
+  default_view TEXT        DEFAULT 'daily',
+  ai_context   JSONB       DEFAULT '{}'::jsonb,
   created_at   TIMESTAMPTZ DEFAULT NOW(),
   updated_at   TIMESTAMPTZ DEFAULT NOW()
 );
@@ -48,10 +36,10 @@ CREATE POLICY "users_own" ON orvixplan.users
   WITH CHECK (auth.uid() = id);
 
 -- ================================================================
--- FIXED_TASKS (tarefas recorrentes — ex: Bíblia 06h todo dia)
+-- FIXED_TASKS
 -- ================================================================
 CREATE TABLE orvixplan.fixed_tasks (
-  id           UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID    NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
   label        TEXT    NOT NULL,
   pillar_key   TEXT    NOT NULL,
@@ -68,22 +56,21 @@ CREATE POLICY "fixed_tasks_own" ON orvixplan.fixed_tasks
   WITH CHECK (auth.uid() = user_id);
 
 -- ================================================================
--- DAY_TASKS (tarefas de um dia específico)
+-- DAY_TASKS
 -- ================================================================
 CREATE TABLE orvixplan.day_tasks (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id      UUID NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
-  date         DATE NOT NULL,
-  label        TEXT NOT NULL,
-  pillar_key   TEXT NOT NULL,
-  time_of_day  TIME,
-  notes        TEXT,
-  created_at   TIMESTAMPTZ DEFAULT NOW(),
-  updated_at   TIMESTAMPTZ DEFAULT NOW()
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
+  date        DATE NOT NULL,
+  label       TEXT NOT NULL,
+  pillar_key  TEXT NOT NULL,
+  time_of_day TIME,
+  notes       TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX orvixplan_day_tasks_user_date
-  ON orvixplan.day_tasks(user_id, date);
+CREATE INDEX orvixplan_day_tasks_user_date ON orvixplan.day_tasks(user_id, date);
 
 ALTER TABLE orvixplan.day_tasks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "day_tasks_own" ON orvixplan.day_tasks
@@ -91,10 +78,10 @@ CREATE POLICY "day_tasks_own" ON orvixplan.day_tasks
   WITH CHECK (auth.uid() = user_id);
 
 -- ================================================================
--- DAY_CHECKS (conclusão — unifica fixed e day tasks)
+-- DAY_CHECKS
 -- ================================================================
 CREATE TABLE orvixplan.day_checks (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id       UUID NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
   date          DATE NOT NULL,
   task_id       UUID,
@@ -103,7 +90,7 @@ CREATE TABLE orvixplan.day_checks (
   completed_at  TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT check_one_task CHECK (
     (task_id IS NOT NULL AND fixed_task_id IS NULL) OR
-    (task_id IS NULL AND fixed_task_id IS NOT NULL)
+    (task_id IS NULL     AND fixed_task_id IS NOT NULL)
   )
 );
 
@@ -124,7 +111,7 @@ CREATE POLICY "day_checks_own" ON orvixplan.day_checks
 -- AI_CHAT_HISTORY
 -- ================================================================
 CREATE TABLE orvixplan.ai_chat_history (
-  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id    UUID NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
   date       DATE,
   role       TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
@@ -133,8 +120,7 @@ CREATE TABLE orvixplan.ai_chat_history (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX orvixplan_chat_user_date
-  ON orvixplan.ai_chat_history(user_id, date, created_at);
+CREATE INDEX orvixplan_chat_user_date ON orvixplan.ai_chat_history(user_id, date, created_at);
 
 ALTER TABLE orvixplan.ai_chat_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "chat_own" ON orvixplan.ai_chat_history
@@ -142,10 +128,10 @@ CREATE POLICY "chat_own" ON orvixplan.ai_chat_history
   WITH CHECK (auth.uid() = user_id);
 
 -- ================================================================
--- REFLECTIONS (reflexões salvas do fim do dia)
+-- REFLECTIONS
 -- ================================================================
 CREATE TABLE orvixplan.reflections (
-  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id        UUID NOT NULL REFERENCES orvixplan.users(id) ON DELETE CASCADE,
   date           DATE NOT NULL,
   completion_pct INT  DEFAULT 0,
@@ -162,7 +148,7 @@ CREATE POLICY "reflections_own" ON orvixplan.reflections
   WITH CHECK (auth.uid() = user_id);
 
 -- ================================================================
--- VIEW: progresso diário (últimos 90 dias)
+-- VIEW: progresso diário
 -- ================================================================
 CREATE OR REPLACE VIEW orvixplan.v_day_progress AS
 SELECT
@@ -179,18 +165,18 @@ SELECT
   END AS completion_pct
 FROM orvixplan.users u
 CROSS JOIN generate_series(NOW() - INTERVAL '90 days', NOW(), '1 day') AS gs(day)
-LEFT JOIN orvixplan.day_tasks  dt    ON dt.user_id    = u.id AND dt.date    = gs.day::DATE
-LEFT JOIN orvixplan.fixed_tasks ft   ON ft.user_id    = u.id AND ft.active  = TRUE
+LEFT JOIN orvixplan.day_tasks   dt    ON dt.user_id    = u.id AND dt.date    = gs.day::DATE
+LEFT JOIN orvixplan.fixed_tasks ft    ON ft.user_id    = u.id AND ft.active  = TRUE
 LEFT JOIN orvixplan.day_checks  dc_dt ON dc_dt.user_id = u.id AND dc_dt.date = gs.day::DATE AND dc_dt.task_id       = dt.id
 LEFT JOIN orvixplan.day_checks  dc_ft ON dc_ft.user_id = u.id AND dc_ft.date = gs.day::DATE AND dc_ft.fixed_task_id = ft.id
 GROUP BY u.id, gs.day;
 
 -- ================================================================
--- FUNÇÃO RPC: toggle de conclusão de tarefa
+-- RPC: toggle de conclusão
 -- ================================================================
 CREATE OR REPLACE FUNCTION orvixplan.toggle_task_check(
-  p_user_id     UUID,
-  p_date        DATE,
+  p_user_id       UUID,
+  p_date          DATE,
   p_task_id       UUID DEFAULT NULL,
   p_fixed_task_id UUID DEFAULT NULL
 ) RETURNS BOOLEAN AS $$
@@ -225,13 +211,13 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ================================================================
--- SEED: tarefas fixas padrão para o Glauco
--- Execute SEPARADAMENTE após criar o usuário no Auth
--- Substitua 'SEU-UUID-AQUI' pelo UUID em Auth > Users
+-- SEED: tarefas fixas do Glauco
+-- Execute após criar o usuário em Auth > Users
+-- Substitua SEU-UUID pelo UUID real
 -- ================================================================
 /*
 INSERT INTO orvixplan.fixed_tasks (user_id, label, pillar_key, time_of_day) VALUES
-  ('SEU-UUID-AQUI', 'Leitura da Bíblia', 'espiritual', '06:00'),
-  ('SEU-UUID-AQUI', 'Oração em família',  'espiritual', '07:00'),
-  ('SEU-UUID-AQUI', 'Tempo com a Mara',   'familia',    '22:00');
+  ('SEU-UUID', 'Leitura da Bíblia', 'espiritual', '06:00'),
+  ('SEU-UUID', 'Oração em família',  'espiritual', '07:00'),
+  ('SEU-UUID', 'Tempo com a Mara',   'familia',    '22:00');
 */
