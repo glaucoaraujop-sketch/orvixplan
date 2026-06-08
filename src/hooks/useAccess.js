@@ -30,9 +30,9 @@ export function useAccess(userId) {
   }
 }
 
-// Abre o checkout do Stripe (mensal ou anual) e redireciona.
-export async function irParaCheckout(ciclo) {
-  const { data, error } = await supabase.functions.invoke('stripe-checkout', { body: { ciclo } })
+// Abre o checkout do Stripe (pagamento único vitalício) e redireciona.
+export async function irParaCheckout() {
+  const { data, error } = await supabase.functions.invoke('stripe-checkout', { body: {} })
   if (error || !data?.url) throw new Error(data?.error || 'Erro ao abrir checkout')
   window.location.href = data.url
 }

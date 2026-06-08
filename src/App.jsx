@@ -7,6 +7,7 @@ import { DailyView } from './views/DailyView.jsx'
 import { WeeklyView } from './views/WeeklyView.jsx'
 import { MonthlyView } from './views/MonthlyView.jsx'
 import { LoginView } from './views/LoginView.jsx'
+import { LandingView } from './views/LandingView.jsx'
 import { SettingsModal } from './components/SettingsModal.jsx'
 import { PricingModal } from './components/PricingModal.jsx'
 import { DEFAULT_SETTINGS } from './constants/defaults.js'
@@ -30,6 +31,7 @@ export default function App() {
   const [settings,     setSettings]     = useState(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
   const [showPricing,  setShowPricing]  = useState(false)
+  const [showLogin,    setShowLogin]    = useState(false)
 
   const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, fixedTasks, addFixedTask, removeFixedTask } =
     useSupabaseStore(user?.id)
@@ -96,8 +98,12 @@ export default function App() {
     )
   }
 
-  // Not authenticated
-  if (!user) return <LoginView onSignIn={signIn} onVerifyOtp={verifyOtp} />
+  // Not authenticated → landing de vendas; CTA abre o login
+  if (!user) {
+    return showLogin
+      ? <LoginView onSignIn={signIn} onVerifyOtp={verifyOtp} onBack={() => setShowLogin(false)} />
+      : <LandingView onStart={() => setShowLogin(true)} />
+  }
 
   // Acesso expirado (trial vencido ou Pro não renovado) → paywall bloqueante
   if (!access.loading && !access.ativo) {
@@ -201,13 +207,7 @@ export default function App() {
           <span>
             🎁 Teste grátis — {access.diasRestantes} {access.diasRestantes === 1 ? 'dia restante' : 'dias restantes'}
           </span>
-          <button onClick={() => setShowPricing(true)} style={bannerBtn}>Assinar</button>
-        </div>
-      )}
-      {access.status === 'inadimplente' && (
-        <div style={bannerStyle('#FEF2F2', '#DC2626')}>
-          <span>⚠️ Pagamento pendente — regularize para manter o acesso</span>
-          <button onClick={() => setShowPricing(true)} style={{ ...bannerBtn, background: '#DC2626' }}>Resolver</button>
+          <button onClick={() => setShowPricing(true)} style={bannerBtn}>Liberar por R$ 37</button>
         </div>
       )}
 

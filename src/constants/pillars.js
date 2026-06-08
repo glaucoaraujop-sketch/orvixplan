@@ -39,6 +39,38 @@ export const PILLARS = [
     light: '#FEF3C7',
     text: '#B45309',
   },
+  {
+    id: 'financas',
+    label: 'Finanças',
+    emoji: '💰',
+    color: '#059669',
+    light: '#D1FAE5',
+    text: '#047857',
+  },
+  {
+    id: 'estudos',
+    label: 'Estudos',
+    emoji: '📚',
+    color: '#2563EB',
+    light: '#DBEAFE',
+    text: '#1D4ED8',
+  },
+  {
+    id: 'lazer',
+    label: 'Lazer',
+    emoji: '🎨',
+    color: '#DB2777',
+    light: '#FCE7F3',
+    text: '#BE185D',
+  },
+  {
+    id: 'social',
+    label: 'Social',
+    emoji: '👥',
+    color: '#0891B2',
+    light: '#CFFAFE',
+    text: '#0E7490',
+  },
 ]
 
 export const PILLAR_MAP = Object.fromEntries(PILLARS.map((p) => [p.id, p]))

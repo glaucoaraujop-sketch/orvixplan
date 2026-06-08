@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export function LoginView({ onSignIn, onVerifyOtp }) {
+export function LoginView({ onSignIn, onVerifyOtp, onBack }) {
   const [email,   setEmail]   = useState('')
   const [code,    setCode]    = useState('')
   const [step,    setStep]    = useState('email')
@@ -44,6 +44,14 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
+        {onBack && (
+          <button onClick={onBack} style={{
+            border: 'none', background: 'none', color: '#6B7280', fontSize: 13,
+            cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12, padding: 4,
+          }}>
+            ← Voltar
+          </button>
+        )}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, background: '#4338CA',

@@ -63,18 +63,21 @@ Deno.serve(async (req) => {
         const userId = s.client_reference_id || s.metadata?.user_id || null
         if (!userId) { await registrar(event, null, 'checkout', { status: 'sem_user_id' }); break }
 
-        const ciclo = s.metadata?.ciclo || (s.mode === 'subscription' ? 'mensal' : 'anual')
+        const ciclo = s.metadata?.ciclo || (s.mode === 'subscription' ? 'mensal' : 'vitalicio')
         let periodoFim: Date
         let subId: string | null = null
 
         if (s.mode === 'subscription' && s.subscription) {
-          // Mensal: fonte da verdade é o current_period_end da assinatura
+          // Mensal (legado): fonte da verdade é o current_period_end da assinatura
           subId = String(s.subscription)
           const sub = await stripe.subscriptions.retrieve(subId)
           periodoFim = new Date(sub.current_period_end * 1000)
-        } else {
-          // Anual à vista (pagamento único): libera 12 meses
+        } else if (ciclo === 'anual') {
+          // Anual à vista (legado): libera 12 meses
           periodoFim = addMonths(new Date(), 12)
+        } else {
+          // Vitalício (pagamento único R$37): acesso para sempre
+          periodoFim = addMonths(new Date(), 1200) // 100 anos
         }
 
         await supabase.from('users').update({

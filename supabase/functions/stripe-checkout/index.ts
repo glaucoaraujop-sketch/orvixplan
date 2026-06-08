@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return json({ error: 'Não autorizado' }, 401)
 
-  const { ciclo } = await req.json().catch(() => ({ ciclo: 'mensal' }))
+  // Produto único: pagamento único vitalício
+  const ciclo = 'vitalicio'
 
   // Reaproveita o customer do Stripe se já existir
   const { data: perfil } = await supabase
@@ -50,36 +51,19 @@ Deno.serve(async (req) => {
 
   let session
   try {
-    if (ciclo === 'anual') {
-      // Pagamento único — R$ 219,00 libera 12 meses
-      session = await stripe.checkout.sessions.create({
-        ...common,
-        mode: 'payment',
-        line_items: [{
-          price_data: {
-            currency: 'brl',
-            unit_amount: 21900,
-            product_data: { name: 'OrvixPlan Pro — Anual (12 meses)' },
-          },
-          quantity: 1,
-        }],
-      })
-    } else {
-      // Assinatura recorrente — R$ 19,90/mês
-      session = await stripe.checkout.sessions.create({
-        ...common,
-        mode: 'subscription',
-        line_items: [{
-          price_data: {
-            currency: 'brl',
-            unit_amount: 1990,
-            recurring: { interval: 'month' },
-            product_data: { name: 'OrvixPlan Pro — Mensal' },
-          },
-          quantity: 1,
-        }],
-      })
-    }
+    // Oferta única: pagamento único R$ 37,00 → acesso vitalício
+    session = await stripe.checkout.sessions.create({
+      ...common,
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'brl',
+          unit_amount: 3700,
+          product_data: { name: 'OrvixPlan — Acesso Vitalício' },
+        },
+        quantity: 1,
+      }],
+    })
   } catch (err: any) {
     return json({ error: err?.message ?? 'Erro ao criar checkout' }, 500)
   }

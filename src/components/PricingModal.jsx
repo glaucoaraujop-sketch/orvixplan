@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { irParaCheckout } from '../hooks/useAccess.js'
 
-// Tela de planos / paywall. `bloqueante` esconde o botão de fechar (plano expirado).
+// Paywall — oferta única: pagamento único R$37 (vitalício).
+// `bloqueante` esconde o botão de fechar (trial expirado).
 export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut }) {
-  const [loading, setLoading] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState(null)
 
-  const comprar = async (ciclo) => {
+  const comprar = async () => {
     setErro(null)
-    setLoading(ciclo)
-    try { await irParaCheckout(ciclo) }
-    catch (e) { setErro(e.message); setLoading(null) }
+    setLoading(true)
+    try { await irParaCheckout() }
+    catch (e) { setErro(e.message); setLoading(false) }
   }
 
   return (
@@ -20,42 +21,37 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut })
           <button onClick={onClose} style={closeBtn} aria-label="Fechar">×</button>
         )}
 
-        <div style={{ textAlign: 'center', marginBottom: 6 }}>
+        <div style={{ textAlign: 'center', marginBottom: 4 }}>
           <div style={{ fontSize: 32 }}>🚀</div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1E1B4B', margin: '8px 0 4px' }}>
-            {bloqueante ? 'Seu acesso expirou' : 'Desbloqueie o OrvixPlan Pro'}
+            {bloqueante ? 'Seu teste acabou' : 'Desbloqueie o OrvixPlan'}
           </h2>
           <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5 }}>
-            {motivo || 'Planeje em 5 pilares, receba lembretes automáticos e use a IA sem limites práticos.'}
+            {motivo || 'Pague uma vez e use para sempre — sem mensalidade, sem renovação.'}
           </p>
         </div>
 
-        {/* Anual — destaque */}
+        {/* Oferta única — vitalício */}
         <div style={{ ...card, borderColor: '#4338CA', position: 'relative' }}>
-          <span style={badge}>MAIS ECONÔMICO</span>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#1E1B4B' }}>Anual</span>
-            <span style={{ fontWeight: 700, fontSize: 22, color: '#4338CA' }}>R$ 219</span>
+          <span style={badge}>PAGAMENTO ÚNICO</span>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+            <span style={{ fontSize: 14, color: '#9CA3AF' }}>R$</span>
+            <span style={{ fontWeight: 800, fontSize: 40, color: '#4338CA', lineHeight: 1 }}>37</span>
           </div>
-          <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 10px' }}>
-            12 meses — equivale a R$ 18,25/mês · pagamento único
+          <p style={{ fontSize: 12, color: '#16A34A', textAlign: 'center', fontWeight: 600, margin: '4px 0 12px' }}>
+            ✓ Acesso vitalício · pague uma vez só
           </p>
-          <button onClick={() => comprar('anual')} disabled={loading} style={btnPrimary}>
-            {loading === 'anual' ? 'Abrindo…' : 'Assinar anual'}
-          </button>
-        </div>
 
-        {/* Mensal */}
-        <div style={card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#1E1B4B' }}>Mensal</span>
-            <span style={{ fontWeight: 700, fontSize: 22, color: '#1E1B4B' }}>R$ 19,90</span>
-          </div>
-          <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 10px' }}>
-            Renova todo mês · cancele quando quiser
-          </p>
-          <button onClick={() => comprar('mensal')} disabled={loading} style={btnSecondary}>
-            {loading === 'mensal' ? 'Abrindo…' : 'Assinar mensal'}
+          <ul style={beneficios}>
+            <li>📅 Planejamento diário, semanal e mensal</li>
+            <li>🎯 Categorias de vida (espiritual, família, trabalho…)</li>
+            <li>🔔 Lembretes automáticos no horário de cada tarefa</li>
+            <li>✨ Assistente de IA para organizar seu dia</li>
+            <li>📝 Diário e acompanhamento de progresso</li>
+          </ul>
+
+          <button onClick={comprar} disabled={loading} style={btnPrimary}>
+            {loading ? 'Abrindo…' : 'Liberar acesso vitalício'}
           </button>
         </div>
 
@@ -63,7 +59,7 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut })
           <p style={{ fontSize: 12, color: '#DC2626', textAlign: 'center', marginTop: 4 }}>{erro}</p>
         )}
 
-        <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', marginTop: 6 }}>
+        <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>
           Pagamento seguro via Stripe · pix e cartão
         </p>
 
@@ -96,19 +92,21 @@ const closeBtn = {
   fontSize: 26, color: '#9CA3AF', cursor: 'pointer', lineHeight: 1,
 }
 const card = {
-  border: '1.5px solid #E0E7FF', borderRadius: 12, padding: '14px 14px',
+  border: '2px solid #E0E7FF', borderRadius: 14, padding: '16px 16px',
 }
 const badge = {
-  position: 'absolute', top: -9, left: 14, background: '#4338CA', color: 'white',
-  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, letterSpacing: '.5px',
+  position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
+  background: '#4338CA', color: 'white',
+  fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, letterSpacing: '.5px',
+  whiteSpace: 'nowrap',
+}
+const beneficios = {
+  listStyle: 'none', padding: 0, margin: '0 0 14px',
+  display: 'flex', flexDirection: 'column', gap: 7,
+  fontSize: 13, color: '#374151', lineHeight: 1.4,
 }
 const btnPrimary = {
-  width: '100%', padding: '11px', borderRadius: 9, border: 'none',
-  background: '#4338CA', color: 'white', fontSize: 14, fontWeight: 700,
-  cursor: 'pointer', fontFamily: 'inherit',
-}
-const btnSecondary = {
-  width: '100%', padding: '11px', borderRadius: 9, border: '1.5px solid #4338CA',
-  background: 'white', color: '#4338CA', fontSize: 14, fontWeight: 700,
+  width: '100%', padding: '13px', borderRadius: 10, border: 'none',
+  background: '#4338CA', color: 'white', fontSize: 15, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
 }
