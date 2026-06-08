@@ -3,9 +3,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Apenas a chave Anthropic precisa de build arg (é secret)
+# Supabase URL e anon key estão hardcoded no código (são públicas por design)
 ARG VITE_ANTHROPIC_KEY
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_ANTHROPIC_KEY=$VITE_ANTHROPIC_KEY
 RUN npm run build
 
 FROM nginx:alpine
