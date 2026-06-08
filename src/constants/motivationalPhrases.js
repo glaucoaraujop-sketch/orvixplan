@@ -1,0 +1,61 @@
+// Frases motivacionais — lista estática (zero custo de IA).
+// Uma por dia, escolhida de forma determinística pelo dia do ano.
+export const MOTIVATIONAL_PHRASES = [
+  'Comece onde você está. Use o que você tem. Faça o que você pode.',
+  'Um dia de cada vez. Uma tarefa de cada vez.',
+  'Disciplina é escolher entre o que você quer agora e o que você quer mais.',
+  'Pequenos progressos diários levam a grandes resultados.',
+  'O segredo de seguir em frente é começar.',
+  'Foco no progresso, não na perfeição.',
+  'Sua rotina de hoje constrói a sua vida de amanhã.',
+  'Feito é melhor que perfeito.',
+  'Equilíbrio não é fazer tudo, é fazer o que importa.',
+  'Você não precisa ser extraordinário, só consistente.',
+  'A motivação te faz começar. O hábito te faz continuar.',
+  'Cada tarefa concluída é uma promessa cumprida com você mesmo.',
+  'Organize o caos de hoje e colha a paz de amanhã.',
+  'O tempo que você tem é suficiente para o que realmente importa.',
+  'Não conte os dias. Faça os dias contarem.',
+  'Grandes jornadas começam com um único passo planejado.',
+  'Cuide do seu corpo, da sua mente e das suas relações — nessa ordem importa.',
+  'A clareza vem da ação, não do pensamento.',
+  'Priorize. Nem tudo merece a sua energia.',
+  'Você é o autor do seu dia. Escreva uma boa página hoje.',
+  'Consistência supera intensidade no longo prazo.',
+  'Descanso também faz parte da produtividade.',
+  'O que recebe atenção, floresce.',
+  'Faça hoje o que seu eu de amanhã vai agradecer.',
+  'Menos pressa, mais direção.',
+  'Comece pequeno, mas comece.',
+  'Sua energia segue o seu foco.',
+  'Planejar é trazer o futuro para o presente e agir nele.',
+  'O progresso ama a constância.',
+  'Um plano simples seguido é melhor que um plano perfeito ignorado.',
+  'Você não precisa de mais tempo, precisa de mais foco.',
+  'Cada manhã é uma nova chance de acertar.',
+  'Realize uma coisa importante antes do meio-dia e o dia já valeu.',
+  'O equilíbrio se constrói nas escolhas pequenas do dia a dia.',
+  'Celebre as pequenas vitórias. Elas somam.',
+  'A vida acontece nos detalhes que você decide cuidar.',
+  'Tenha metas grandes, mas viva em passos pequenos.',
+  'Quem cuida da rotina, domina o destino.',
+  'Hoje é um bom dia para um bom dia.',
+  'Termine o que começa. A sensação vale o esforço.',
+  'O futuro é construído com o que você faz agora.',
+  'Respire fundo. Você está exatamente onde precisa começar.',
+  'Não existe dia perfeito, existe dia bem aproveitado.',
+  'A maior produtividade é fazer bem o que é essencial.',
+  'Sua atenção é seu recurso mais valioso. Invista bem.',
+  'Avance mesmo devagar. Parado, você não chega.',
+  'O melhor momento para se organizar é agora.',
+  'Transforme intenção em ação e sonho em rotina.',
+  'Cada pilar da sua vida merece um pouco do seu dia.',
+  'Você consegue mais do que imagina, um passo por vez.',
+]
+
+export function getPhraseOfDay(date = new Date()) {
+  const start = new Date(date.getFullYear(), 0, 0)
+  const diff = date - start
+  const dayOfYear = Math.floor(diff / 86400000)
+  return MOTIVATIONAL_PHRASES[dayOfYear % MOTIVATIONAL_PHRASES.length]
+}

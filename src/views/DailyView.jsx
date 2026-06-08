@@ -6,6 +6,8 @@ import { PillarBadge } from '../components/PillarBadge.jsx'
 import { PILLARS } from '../constants/pillars.js'
 import { calcDayPct, calcPillarBreakdown } from '../utils/statsUtils.js'
 import { formatDateFull } from '../utils/dateUtils.js'
+import { getPhraseOfDay } from '../constants/motivationalPhrases.js'
+import { shareProgressCard } from '../utils/shareCard.js'
 import { useNotifications } from '../hooks/useNotifications.js'
 
 const AI_MODES = [
@@ -94,13 +96,37 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
+      {/* Frase motivacional do dia */}
+      <div style={{
+        ...card, display: 'flex', alignItems: 'center', gap: 10,
+        background: 'linear-gradient(135deg, #EEF0FF 0%, #FDF4FF 100%)',
+      }}>
+        <span style={{ fontSize: 22 }}>💭</span>
+        <span style={{ fontSize: 13, color: '#4338CA', fontWeight: 600, lineHeight: 1.45, fontStyle: 'italic' }}>
+          {getPhraseOfDay(date)}
+        </span>
+      </div>
+
       {/* Progress */}
       <div style={card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontWeight: 700, fontSize: 15, color: '#1E1B4B' }}>Progresso do dia</span>
-          <span style={{ fontWeight: 700, fontSize: 22, color: pct >= 80 ? '#16A34A' : pct >= 50 ? '#4338CA' : '#D97706' }}>
-            {pct}%
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {allTasks.length > 0 && (
+              <button
+                onClick={() => shareProgressCard({ pct, dateLabel: formatDateFull(date), breakdown: byPillar })}
+                title="Compartilhar progresso"
+                style={{
+                  minWidth: 36, minHeight: 36, borderRadius: 8, border: '1.5px solid #E0E7FF',
+                  background: 'white', cursor: 'pointer', fontSize: 15,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >📤</button>
+            )}
+            <span style={{ fontWeight: 700, fontSize: 22, color: pct >= 80 ? '#16A34A' : pct >= 50 ? '#4338CA' : '#D97706' }}>
+              {pct}%
+            </span>
+          </div>
         </div>
 
         <div style={{ height: 8, background: '#EEF0FF', borderRadius: 99, overflow: 'hidden', marginBottom: 14 }}>

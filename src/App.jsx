@@ -6,6 +6,7 @@ import { useAccess } from './hooks/useAccess.js'
 import { DailyView } from './views/DailyView.jsx'
 import { WeeklyView } from './views/WeeklyView.jsx'
 import { MonthlyView } from './views/MonthlyView.jsx'
+import { BalanceView } from './views/BalanceView.jsx'
 import { LoginView } from './views/LoginView.jsx'
 import { LandingView } from './views/LandingView.jsx'
 import { SettingsModal } from './components/SettingsModal.jsx'
@@ -20,9 +21,10 @@ const loadSettings = () => {
 }
 
 const VIEWS = [
-  { id: 'daily',   label: 'Diário'  },
-  { id: 'weekly',  label: 'Semanal' },
-  { id: 'monthly', label: 'Mensal'  },
+  { id: 'daily',    label: 'Diário'    },
+  { id: 'weekly',   label: 'Semanal'   },
+  { id: 'monthly',  label: 'Mensal'    },
+  { id: 'balance',  label: 'Equilíbrio' },
 ]
 
 export default function App() {
@@ -228,33 +230,35 @@ export default function App() {
         </div>
       )}
 
-      {/* Date navigation */}
-      <div
-        style={{
-          maxWidth: 800,
-          margin: '0 auto',
-          padding: '14px 20px 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          justifyContent: 'center',
-        }}
-      >
-        <button onClick={() => navigate(-1)} style={navBtnStyle}>←</button>
-        <span
+      {/* Date navigation (não aparece em Equilíbrio) */}
+      {view !== 'balance' && (
+        <div
           style={{
-            fontSize: 15, fontWeight: 600, color: '#1E1B4B',
-            textAlign: 'center', textTransform: 'capitalize',
-            flex: 1, maxWidth: 380,
+            maxWidth: 800,
+            margin: '0 auto',
+            padding: '14px 20px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            justifyContent: 'center',
           }}
         >
-          {titleLabel()}
-        </span>
-        <button onClick={() => setDate(new Date())} style={{ ...navBtnStyle, fontSize: 12, padding: '6px 10px' }}>
-          Hoje
-        </button>
-        <button onClick={() => navigate(1)} style={navBtnStyle}>→</button>
-      </div>
+          <button onClick={() => navigate(-1)} style={navBtnStyle}>←</button>
+          <span
+            style={{
+              fontSize: 15, fontWeight: 600, color: '#1E1B4B',
+              textAlign: 'center', textTransform: 'capitalize',
+              flex: 1, maxWidth: 380,
+            }}
+          >
+            {titleLabel()}
+          </span>
+          <button onClick={() => setDate(new Date())} style={{ ...navBtnStyle, fontSize: 12, padding: '6px 10px' }}>
+            Hoje
+          </button>
+          <button onClick={() => navigate(1)} style={navBtnStyle}>→</button>
+        </div>
+      )}
 
       {/* Store loading indicator */}
       {storeLoading && (
@@ -291,6 +295,13 @@ export default function App() {
             getDay={getDay}
             loadDateRange={loadDateRange}
             onSelectDate={(d) => { setDate(d); setView('daily') }}
+          />
+        )}
+        {view === 'balance' && (
+          <BalanceView
+            getDay={getDay}
+            loadDateRange={loadDateRange}
+            ai={ai}
           />
         )}
       </main>

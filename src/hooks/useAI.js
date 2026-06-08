@@ -52,6 +52,11 @@ export function useAI(settings = {}) {
   const optimizeDay = (tasks)              => call([{ role: 'user', content: PROMPTS.optimizeDay(tasks) }])
   const reflectDay  = (pct, done, pending) => call([{ role: 'user', content: PROMPTS.reflectDay(pct, done, pending) }])
 
+  // Revisão semanal — prompt compacto pra gastar pouco token (1 crédito)
+  const reviewWeek  = (resumo) => call([{ role: 'user', content:
+    `Resumo da minha última semana por pilar (concluídas/total):\n${resumo}\n\n` +
+    `Escreva uma reflexão curta e motivadora (máx 4 linhas) e depois 3 sugestões práticas e específicas pra eu equilibrar melhor a próxima semana. Seja direto e caloroso, sem clichês.` }])
+
   const chat = async (message, dayCtx, history = []) => {
     const trimmed  = history.slice(-MAX_HISTORY)
     const prefix   = PROMPTS.chat(dayCtx)
@@ -62,5 +67,5 @@ export function useAI(settings = {}) {
     return call(messages)
   }
 
-  return { loading, error, limiteIA, clearLimiteIA: () => setLimiteIA(false), suggestDay, optimizeDay, reflectDay, chat }
+  return { loading, error, limiteIA, clearLimiteIA: () => setLimiteIA(false), suggestDay, optimizeDay, reflectDay, reviewWeek, chat }
 }
