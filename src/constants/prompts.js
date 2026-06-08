@@ -1,62 +1,26 @@
+// System prompt compacto — menos tokens = menos custo
 export const buildSystemPrompt = (cfg = {}) => {
-  const {
-    name      = 'Glauco',
-    role      = 'empreendedor e desenvolvedor',
-    family    = 'marido da Mara e pai do Theo',
-    faith     = 'uma das Testemunhas de Jeová, com fé ativa no dia a dia',
-    companies = 'Doutor iPhone (assistência técnica Apple/Android), OrvixFlow (CRM + WhatsApp), OrvixOS (sistema para oficinas)',
-  } = cfg
+  const name      = cfg.name      || 'Glauco'
+  const role      = cfg.aiRole    || 'empreendedor e desenvolvedor'
+  const family    = cfg.aiFamily  || 'casado com Mara, pai do Theo'
+  const companies = cfg.aiCompanies || 'Doutor iPhone, OrvixFlow, OrvixOS'
 
-  return `Você é um assistente pessoal de planejamento e vida para ${name}.
-
-CONTEXTO:
-- Papel: ${role}
-- Família: ${family}
-- Fé: ${faith}
-- Empresas: ${companies}
-- Pilares: Espiritual (roxo), Família (vermelho), Trabalho (azul), Saúde (verde), Pessoal (âmbar)
-
-DIRETRIZES:
-- Responda SEMPRE em português brasileiro
-- Seja direto, prático e encorajador
-- Reconheça o equilíbrio entre fé, família e trabalho
-- Não sugira tarefas que conflitem com valores religiosos ou familiares
-- Ao sugerir planos, inclua sempre os pilares espiritual e família
-- Use linguagem próxima, não corporativa
-- Limite a 400 palavras salvo quando pedido mais detalhes`
+  return `Assistente pessoal do ${name} (TJ, ${family}). Empresas: ${companies}. Papel: ${role}.
+Pilares: Espiritual, Família, Trabalho, Saúde, Pessoal.
+Responda em PT-BR, direto e encorajador. Máx 200 palavras.`
 }
 
 export const PROMPTS = {
-  suggestDay: (date, context = '') => `
-Sugira um plano de dia equilibrado para ${date}.
-${context}
-Tarefas fixas já existentes: Bíblia 06h, Oração 07h, Tempo com Mara 22h.
-Distribua tarefas equilibradas nos 5 pilares ao longo do dia.
-Formato: lista com horário, tarefa e pilar entre colchetes.
-Exemplo: "09:00 — Revisar ordens de serviço [Trabalho]"`,
+  suggestDay: (date, tasks = '') =>
+    `Sugira um plano para ${date}. Tarefas fixas: Bíblia 06h, Oração 07h, Mara 22h.${tasks ? `\nTarefas já adicionadas: ${tasks}` : ''}
+Formato: "HH:MM — Tarefa [Pilar]". Distribua nos 5 pilares.`,
 
-  optimizeDay: (tasks) => `
-Meu plano para hoje:
-${tasks}
+  optimizeDay: (tasks) =>
+    `Meu plano:\n${tasks}\nSugira 2-3 ajustes objetivos de horário ou equilíbrio entre pilares.`,
 
-Analise e sugira otimizações considerando:
-1. Equilíbrio entre os 5 pilares
-2. Ordem lógica (energia, contexto, deslocamento)
-3. Possíveis conflitos de horário
-4. Tarefas sobrecarregadas ou faltando
-Seja específico e objetivo.`,
+  reflectDay: (pct, done, pending) =>
+    `Concluí ${pct}% hoje. Feito: ${done || 'nenhum'}. Pendente: ${pending || 'nenhum'}.
+Reflexão curta: 1 ponto positivo, 1 melhoria, 1 ação para amanhã.`,
 
-  reflectDay: (pct, done, pending) => `
-Hoje concluí ${pct}% das minhas tarefas.
-Concluídas: ${done || 'nenhuma'}.
-Pendentes: ${pending || 'nenhuma'}.
-
-Reflexão encorajadora sobre meu dia:
-1. Destaque o que foi positivo
-2. Reconheça as áreas de melhoria sem culpa
-3. Sugira 1 ação concreta para amanhã
-Seja humano, próximo e edificante.`,
-
-  chat: (dayContext) =>
-    `${dayContext}\nResponda de forma conversacional, como um amigo conselheiro que conhece bem minha vida e meus valores.`,
+  chat: (ctx) => ctx ? `Contexto do meu dia: ${ctx}\n` : '',
 }
