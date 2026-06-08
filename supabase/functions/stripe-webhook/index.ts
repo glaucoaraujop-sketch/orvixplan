@@ -97,8 +97,8 @@ Deno.serve(async (req) => {
           stripe_subscription_id: subId,
         }).eq('id', userId)
 
-        // Bônus de 7 créditos de IA inclusos na compra do app
-        await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 7 })
+        // Bônus de 50 créditos de IA inclusos na compra do app
+        await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 50 })
 
         await registrar(event, userId, 'checkout', {
           stripe_customer_id: s.customer ? String(s.customer) : null,

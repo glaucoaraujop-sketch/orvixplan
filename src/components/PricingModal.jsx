@@ -58,7 +58,7 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, m
                 <li>📅 Planejamento diário, semanal e mensal</li>
                 <li>🎯 9 categorias de vida</li>
                 <li>🔔 Lembretes automáticos por notificação</li>
-                <li>✨ 7 usos de IA inclusos pra começar</li>
+                <li>✨ 50 usos de IA inclusos pra começar</li>
                 <li>📝 Diário e progresso</li>
               </>
             )}

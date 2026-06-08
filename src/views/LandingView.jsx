@@ -28,7 +28,7 @@ export function LandingView({ onStart }) {
         </p>
         <button onClick={onStart} style={ctaBig}>Quero o acesso vitalício →</button>
         <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 10 }}>
-          Pagamento único · sem mensalidade · inclui 7 usos de IA
+          Pagamento único · sem mensalidade · acesso para sempre
         </p>
 
         {/* Mockup de pilares */}
@@ -38,6 +38,26 @@ export function LandingView({ onStart }) {
               <span>{p.emoji}</span><span>{p.label}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Destaque IA */}
+      <section style={{ maxWidth: 960, margin: '0 auto', padding: '20px 20px' }}>
+        <div style={aiHighlight}>
+          <div style={{ fontSize: 40, marginBottom: 6 }}>🤖</div>
+          <span style={aiTag}>POTENCIALIZADO POR IA</span>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: 'white', margin: '10px 0 8px', lineHeight: 1.2 }}>
+            Deixe a Inteligência Artificial<br />organizar seu dia por você
+          </h2>
+          <p style={{ fontSize: 15, color: '#E0E7FF', lineHeight: 1.6, maxWidth: 520, margin: '0 auto 18px' }}>
+            Peça pra IA montar sua agenda, otimizar suas tarefas e refletir sobre o seu dia.
+            É como ter um assistente pessoal de produtividade no bolso.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            {['✨ Sugerir meu dia', '⚡ Otimizar agenda', '🌙 Refletir', '💬 Chat'].map((t) => (
+              <span key={t} style={aiChip}>{t}</span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -71,7 +91,7 @@ export function LandingView({ onStart }) {
             <li>✓ Planejamento diário, semanal e mensal</li>
             <li>✓ 9 categorias de vida</li>
             <li>✓ Lembretes push automáticos</li>
-            <li>✓ 7 usos de IA inclusos (compre mais quando quiser)</li>
+            <li>✓ Assistente de IA integrado</li>
             <li>✓ Diário e progresso</li>
             <li>✓ Todas as atualizações futuras</li>
           </ul>
@@ -124,3 +144,6 @@ const priceCard = { background: 'white', borderRadius: 18, padding: '28px 22px',
 const priceBadge = { position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#4338CA', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 99, letterSpacing: '.5px', whiteSpace: 'nowrap' }
 const beneficios = { listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 9, fontSize: 14, color: '#374151', textAlign: 'left' }
 const footer = { maxWidth: 960, margin: '0 auto', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600, borderTop: '1px solid #EEF0FF' }
+const aiHighlight = { background: 'linear-gradient(135deg, #4338CA 0%, #6D28D9 100%)', borderRadius: 20, padding: '32px 22px', textAlign: 'center', boxShadow: '0 16px 48px rgba(67,56,202,.3)' }
+const aiTag = { display: 'inline-block', background: 'rgba(255,255,255,.18)', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 99, letterSpacing: '.5px' }
+const aiChip = { background: 'rgba(255,255,255,.15)', color: 'white', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 99, border: '1px solid rgba(255,255,255,.25)' }
