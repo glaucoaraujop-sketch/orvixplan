@@ -21,10 +21,11 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, userEmail,
   }
 
   const TABS = [
-    { id: 'geral',   label: 'Geral'   },
-    { id: 'rotina',  label: 'Rotina'  },
-    { id: 'ia',      label: 'IA'      },
-    { id: 'conta',   label: 'Conta'   },
+    { id: 'geral',    label: 'Geral'    },
+    { id: 'rotina',   label: 'Rotina'   },
+    { id: 'ia',       label: 'IA'       },
+    { id: 'instalar', label: 'Instalar' },
+    { id: 'conta',    label: 'Conta'    },
   ]
 
   return (
@@ -180,6 +181,38 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, userEmail,
             </>
           )}
 
+          {/* Instalar como app (PWA) */}
+          {tab === 'instalar' && (
+            <>
+              <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.5, marginBottom: 16 }}>
+                Instale o OrvixPlan na tela inicial pra abrir como um app de verdade —
+                em tela cheia e <strong>recebendo as notificações de lembrete</strong>.
+              </p>
+
+              <div style={installCard}>
+                <div style={installTitle}> iPhone / iPad (Safari)</div>
+                <ol style={installList}>
+                  <li>Abra o site no <strong>Safari</strong></li>
+                  <li>Toque no botão <strong>Compartilhar</strong> <span style={{ fontSize: 15 }}>􀈂</span> (quadrado com seta pra cima)</li>
+                  <li>Role e toque em <strong>“Adicionar à Tela de Início”</strong></li>
+                  <li>Toque em <strong>“Adicionar”</strong> no canto superior</li>
+                </ol>
+                <p style={installNote}>⚠️ No iPhone, as notificações só funcionam depois de instalar por aqui.</p>
+              </div>
+
+              <div style={installCard}>
+                <div style={installTitle}>🤖 Android (Chrome)</div>
+                <ol style={installList}>
+                  <li>Abra o site no <strong>Chrome</strong></li>
+                  <li>Toque no menu <strong>⋮</strong> (três pontos, canto superior)</li>
+                  <li>Toque em <strong>“Instalar app”</strong> ou <strong>“Adicionar à tela inicial”</strong></li>
+                  <li>Confirme em <strong>“Instalar”</strong></li>
+                </ol>
+                <p style={installNote}>💡 Às vezes aparece um banner “Instalar” automático — é só tocar.</p>
+              </div>
+            </>
+          )}
+
           {/* Conta */}
           {tab === 'conta' && (
             <>
@@ -229,4 +262,19 @@ const inputStyle = {
   width: '100%', border: '1.5px solid #E0E7FF', borderRadius: 8,
   padding: '9px 12px', fontFamily: 'inherit', outline: 'none',
   color: '#1E1B4B', marginBottom: 14, display: 'block',
+}
+
+const installCard = {
+  border: '1px solid #EEF0FF', borderRadius: 12, padding: '14px 16px', marginBottom: 12,
+}
+const installTitle = {
+  fontSize: 14, fontWeight: 700, color: '#1E1B4B', marginBottom: 8,
+}
+const installList = {
+  margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6,
+  fontSize: 13, color: '#374151', lineHeight: 1.4,
+}
+const installNote = {
+  fontSize: 12, color: '#6B7280', marginTop: 10,
+  background: '#F9FAFB', borderRadius: 8, padding: '7px 10px',
 }

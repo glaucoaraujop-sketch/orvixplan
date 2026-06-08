@@ -10,6 +10,7 @@ import { LoginView } from './views/LoginView.jsx'
 import { LandingView } from './views/LandingView.jsx'
 import { SettingsModal } from './components/SettingsModal.jsx'
 import { PricingModal } from './components/PricingModal.jsx'
+import { OnboardingModal } from './components/OnboardingModal.jsx'
 import { DEFAULT_SETTINGS } from './constants/defaults.js'
 import { MONTHS_PT, formatDateFull, addDays, getWeekDays, dateKey } from './utils/dateUtils.js'
 
@@ -33,6 +34,7 @@ export default function App() {
   const [showPricing,  setShowPricing]  = useState(false)
   const [showLogin,    setShowLogin]    = useState(false)
   const [showIAPack,   setShowIAPack]   = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, fixedTasks, addFixedTask, removeFixedTask } =
     useSupabaseStore(user?.id)
@@ -42,6 +44,20 @@ export default function App() {
 
   // IA sem créditos → abre o modal de compra do pacote
   useEffect(() => { if (ai.limiteIA) setShowIAPack(true) }, [ai.limiteIA])
+
+  // Onboarding na primeira vez (usuário com acesso ativo)
+  useEffect(() => {
+    if (!access.loading && access.ativo) {
+      try {
+        if (localStorage.getItem('orvixplan_onboarded') !== '1') setShowOnboarding(true)
+      } catch {}
+    }
+  }, [access.loading, access.ativo])
+
+  const finishOnboarding = () => {
+    try { localStorage.setItem('orvixplan_onboarded', '1') } catch {}
+    setShowOnboarding(false)
+  }
 
   // Retorno do checkout do Stripe: revalida acesso (webhook pode levar 1–2s) e limpa a URL
   useEffect(() => {
@@ -302,6 +318,8 @@ export default function App() {
           onClose={() => { setShowIAPack(false); ai.clearLimiteIA(); access.refresh() }}
         />
       )}
+
+      {showOnboarding && <OnboardingModal onFinish={finishOnboarding} />}
     </div>
   )
 }
