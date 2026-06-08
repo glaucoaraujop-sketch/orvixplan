@@ -21,14 +21,15 @@ export function useAuth() {
     }
   }, [])
 
-  // Magic link com fluxo implícito — token vem no hash da URL, sem troca PKCE
+  // Sem emailRedirectTo → Supabase envia código OTP (não magic link)
   const signIn = (email) =>
-    supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    })
+    supabase.auth.signInWithOtp({ email })
+
+  // Verifica o código — cria sessão no contexto atual (PWA ou browser)
+  const verifyOtp = (email, token) =>
+    supabase.auth.verifyOtp({ email, token, type: 'email' })
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, loading, signIn, signOut }
+  return { user, loading, signIn, verifyOtp, signOut }
 }
