@@ -1,10 +1,14 @@
-import { DEFAULT_FIXED_TASKS } from '../constants/defaults.js'
-import { getMonthDays, DAYS_PT, MONTHS_PT, dateKey, isSameDay } from '../utils/dateUtils.js'
+import { useEffect } from 'react'
+import { getMonthDays, DAYS_PT, dateKey, isSameDay } from '../utils/dateUtils.js'
 import { calcDayPct, heatmapColor } from '../utils/statsUtils.js'
 
-export function MonthlyView({ date, getDay, onSelectDate }) {
+export function MonthlyView({ date, getDay, loadDateRange, onSelectDate }) {
   const days  = getMonthDays(date)
   const today = new Date()
+
+  useEffect(() => {
+    loadDateRange(days.filter(Boolean).map(dateKey))
+  }, [date]) // eslint-disable-line
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto' }}>
@@ -41,8 +45,7 @@ export function MonthlyView({ date, getDay, onSelectDate }) {
           {days.map((d, i) => {
             if (!d) return <div key={`empty-${i}`} />
 
-            const { tasks, checks } = getDay(d)
-            const allTasks = [...DEFAULT_FIXED_TASKS, ...tasks]
+            const { tasks: allTasks, checks } = getDay(d)
             const pct = calcDayPct(allTasks, checks)
             const isToday    = isSameDay(d, today)
             const isSelected = isSameDay(d, date)

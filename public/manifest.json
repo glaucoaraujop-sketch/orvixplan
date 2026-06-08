@@ -1,0 +1,14 @@
+{
+  "name": "OrvixPlan",
+  "short_name": "OrvixPlan",
+  "description": "Planeje com propósito. Viva com equilíbrio.",
+  "theme_color": "#4338CA",
+  "background_color": "#F0F1FF",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

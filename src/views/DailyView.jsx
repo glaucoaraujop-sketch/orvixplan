@@ -3,7 +3,6 @@ import { TaskRow } from '../components/TaskRow.jsx'
 import { AddTaskForm } from '../components/AddTaskForm.jsx'
 import { AIPanel } from '../components/AIPanel.jsx'
 import { PillarBadge } from '../components/PillarBadge.jsx'
-import { DEFAULT_FIXED_TASKS } from '../constants/defaults.js'
 import { PILLARS } from '../constants/pillars.js'
 import { calcDayPct, calcPillarBreakdown } from '../utils/statsUtils.js'
 import { formatDateFull } from '../utils/dateUtils.js'
@@ -22,10 +21,7 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, ai, 
   const [chatMsg,    setChatMsg]    = useState('')
   const [chatHistory,setChatHistory]= useState([])
 
-  const { tasks, checks } = getDay(date)
-  const allTasks = [...DEFAULT_FIXED_TASKS, ...tasks].sort((a, b) =>
-    (a.time || '').localeCompare(b.time || ''),
-  )
+  const { tasks: allTasks, checks } = getDay(date)
   const pct       = calcDayPct(allTasks, checks)
   const byPillar  = calcPillarBreakdown(allTasks, checks)
 
@@ -178,7 +174,7 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, ai, 
             key={task.id}
             task={task}
             checked={!!checks[task.id]}
-            onToggle={() => toggleCheck(date, task.id)}
+            onToggle={() => toggleCheck(date, task.id, task.fixed)}
             onDelete={() => deleteTask(date, task.id)}
           />
         ))}

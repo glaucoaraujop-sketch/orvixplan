@@ -1,11 +1,15 @@
-import { DEFAULT_FIXED_TASKS } from '../constants/defaults.js'
+import { useEffect } from 'react'
 import { PILLARS } from '../constants/pillars.js'
 import { calcDayPct, heatmapColor } from '../utils/statsUtils.js'
-import { getWeekDays, formatDateShort, DAYS_PT, isSameDay, dateKey } from '../utils/dateUtils.js'
+import { getWeekDays, DAYS_PT, isSameDay, dateKey } from '../utils/dateUtils.js'
 
-export function WeeklyView({ date, store, getDay, onSelectDate }) {
-  const days = getWeekDays(date)
+export function WeeklyView({ date, getDay, loadDateRange, onSelectDate }) {
+  const days  = getWeekDays(date)
   const today = new Date()
+
+  useEffect(() => {
+    loadDateRange(days.map(dateKey))
+  }, [date]) // eslint-disable-line
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -17,8 +21,7 @@ export function WeeklyView({ date, store, getDay, onSelectDate }) {
         }}
       >
         {days.map((d) => {
-          const { tasks, checks } = getDay(d)
-          const allTasks = [...DEFAULT_FIXED_TASKS, ...tasks]
+          const { tasks: allTasks, checks } = getDay(d)
           const pct = calcDayPct(allTasks, checks)
           const isToday = isSameDay(d, today)
           const isSelected = isSameDay(d, date)
@@ -112,7 +115,7 @@ export function WeeklyView({ date, store, getDay, onSelectDate }) {
             let total = 0, done = 0
             days.forEach((d) => {
               const { tasks: dt, checks: dc } = getDay(d)
-              const all = [...DEFAULT_FIXED_TASKS, ...dt].filter((t) => t.pillar === p.id)
+              const all = dt.filter((t) => t.pillar === p.id)
               total += all.length
               done  += all.filter((t) => dc[t.id]).length
             })

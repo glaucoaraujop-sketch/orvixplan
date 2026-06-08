@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react'
-import { useStore } from './hooks/useStore.js'
+import { useState, useCallback, useEffect } from 'react'
+import { useAuth } from './hooks/useAuth.js'
+import { useSupabaseStore } from './hooks/useSupabaseStore.js'
 import { useAI } from './hooks/useAI.js'
 import { DailyView } from './views/DailyView.jsx'
 import { WeeklyView } from './views/WeeklyView.jsx'
 import { MonthlyView } from './views/MonthlyView.jsx'
+import { LoginView } from './views/LoginView.jsx'
 import { SettingsModal } from './components/SettingsModal.jsx'
 import { DEFAULT_SETTINGS } from './constants/defaults.js'
-import { MONTHS_PT, formatDateFull, addDays, getWeekDays } from './utils/dateUtils.js'
+import { MONTHS_PT, formatDateFull, addDays, getWeekDays, dateKey } from './utils/dateUtils.js'
 
 const loadSettings = () => {
   try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('orvixplan_settings') || '{}') } }
@@ -20,13 +22,26 @@ const VIEWS = [
 ]
 
 export default function App() {
-  const [date,        setDate]        = useState(new Date())
-  const [view,        setView]        = useState('daily')
-  const [settings,    setSettings]    = useState(loadSettings)
-  const [showSettings,setShowSettings]= useState(false)
+  const { user, loading: authLoading, signIn, signOut } = useAuth()
+  const [date,         setDate]         = useState(new Date())
+  const [view,         setView]         = useState('daily')
+  const [settings,     setSettings]     = useState(loadSettings)
+  const [showSettings, setShowSettings] = useState(false)
 
-  const { store, getDay, addTask, deleteTask, toggleCheck } = useStore()
+  const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck } =
+    useSupabaseStore(user?.id)
+
   const ai = useAI(settings.anthropicKey)
+
+  // Load today on mount
+  useEffect(() => {
+    if (user) loadDate(date)
+  }, [user]) // eslint-disable-line
+
+  // Load date when it changes (daily view)
+  useEffect(() => {
+    if (user && view === 'daily') loadDate(date)
+  }, [date, user]) // eslint-disable-line
 
   const saveSettings = useCallback((s) => {
     setSettings(s)
@@ -36,13 +51,11 @@ export default function App() {
   const navigate = (dir) => {
     if (view === 'daily')   setDate((d) => addDays(d, dir))
     if (view === 'weekly')  setDate((d) => addDays(d, dir * 7))
-    if (view === 'monthly') {
-      setDate((d) => {
-        const n = new Date(d)
-        n.setMonth(n.getMonth() + dir)
-        return n
-      })
-    }
+    if (view === 'monthly') setDate((d) => {
+      const n = new Date(d)
+      n.setMonth(n.getMonth() + dir)
+      return n
+    })
   }
 
   const titleLabel = () => {
@@ -53,6 +66,21 @@ export default function App() {
     }
     return `${MONTHS_PT[date.getMonth()]} ${date.getFullYear()}`
   }
+
+  // Auth loading
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F1FF' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>📅</div>
+          <p style={{ color: '#6B7280', fontSize: 14 }}>Carregando…</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Not authenticated
+  if (!user) return <LoginView onSignIn={signIn} />
 
   return (
     <div style={{ minHeight: '100vh', background: '#F0F1FF' }}>
@@ -82,13 +110,10 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div
               style={{
-                width: 32,
-                height: 32,
+                width: 32, height: 32,
                 borderRadius: 8,
                 background: '#4338CA',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 16,
               }}
             >
@@ -98,15 +123,7 @@ export default function App() {
           </div>
 
           {/* View switcher */}
-          <div
-            style={{
-              display: 'flex',
-              background: '#F0F1FF',
-              borderRadius: 8,
-              padding: 3,
-              gap: 2,
-            }}
-          >
+          <div style={{ display: 'flex', background: '#F0F1FF', borderRadius: 8, padding: 3, gap: 2 }}>
             {VIEWS.map((v) => (
               <button
                 key={v.id}
@@ -134,16 +151,13 @@ export default function App() {
           <button
             onClick={() => setShowSettings(true)}
             style={{
-              width: 36,
-              height: 36,
+              width: 36, height: 36,
               borderRadius: 8,
               border: '1.5px solid #E0E7FF',
               background: 'white',
               cursor: 'pointer',
               fontSize: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             ⚙️
@@ -164,30 +178,27 @@ export default function App() {
         }}
       >
         <button onClick={() => navigate(-1)} style={navBtnStyle}>←</button>
-
         <span
           style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: '#1E1B4B',
-            textAlign: 'center',
-            textTransform: 'capitalize',
-            flex: 1,
-            maxWidth: 380,
+            fontSize: 15, fontWeight: 600, color: '#1E1B4B',
+            textAlign: 'center', textTransform: 'capitalize',
+            flex: 1, maxWidth: 380,
           }}
         >
           {titleLabel()}
         </span>
-
-        <button
-          onClick={() => setDate(new Date())}
-          style={{ ...navBtnStyle, fontSize: 12, padding: '6px 10px' }}
-        >
+        <button onClick={() => setDate(new Date())} style={{ ...navBtnStyle, fontSize: 12, padding: '6px 10px' }}>
           Hoje
         </button>
-
         <button onClick={() => navigate(1)} style={navBtnStyle}>→</button>
       </div>
+
+      {/* Store loading indicator */}
+      {storeLoading && (
+        <div style={{ textAlign: 'center', padding: '6px 0', fontSize: 12, color: '#9CA3AF' }}>
+          Sincronizando…
+        </div>
+      )}
 
       {/* Main content */}
       <main style={{ padding: '14px 20px 40px' }}>
@@ -205,8 +216,8 @@ export default function App() {
         {view === 'weekly' && (
           <WeeklyView
             date={date}
-            store={store}
             getDay={getDay}
+            loadDateRange={loadDateRange}
             onSelectDate={(d) => { setDate(d); setView('daily') }}
           />
         )}
@@ -214,6 +225,7 @@ export default function App() {
           <MonthlyView
             date={date}
             getDay={getDay}
+            loadDateRange={loadDateRange}
             onSelectDate={(d) => { setDate(d); setView('daily') }}
           />
         )}
@@ -224,6 +236,8 @@ export default function App() {
           settings={settings}
           onSave={saveSettings}
           onClose={() => setShowSettings(false)}
+          onSignOut={signOut}
+          userEmail={user.email}
         />
       )}
     </div>
