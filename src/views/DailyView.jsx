@@ -25,6 +25,8 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
   const saveTimer  = useRef(null)
   const prevDateRef = useRef(null)
 
+  const { tasks: allTasks, checks, notes: savedNotes } = getDay(date)
+
   // Sync notes when date changes
   useEffect(() => {
     if (prevDateRef.current !== date.toDateString()) {
