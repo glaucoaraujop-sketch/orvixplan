@@ -2,7 +2,7 @@ export const PILLARS = [
   {
     id: 'espiritual',
     label: 'Espiritual',
-    emoji: '✝️',
+    emoji: '📖',
     color: '#7C3AED',
     light: '#EDE9FE',
     text: '#5B21B6',
