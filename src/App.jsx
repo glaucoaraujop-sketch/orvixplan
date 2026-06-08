@@ -31,7 +31,7 @@ export default function App() {
   const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck } =
     useSupabaseStore(user?.id)
 
-  const ai = useAI(settings.anthropicKey)
+  const ai = useAI(settings)
 
   // Load today on mount
   useEffect(() => {

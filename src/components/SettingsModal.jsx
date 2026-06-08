@@ -109,18 +109,6 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, userEmail 
           {/* IA */}
           {tab === 'ia' && (
             <>
-              <label style={labelStyle}>Chave Anthropic (opcional)</label>
-              <input
-                type="password"
-                value={form.anthropicKey || ''}
-                onChange={(e) => set('anthropicKey', e.target.value)}
-                placeholder="sk-ant-… (ou VITE_ANTHROPIC_KEY no EasyPanel)"
-                style={inputStyle}
-              />
-              <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: -10, marginBottom: 16 }}>
-                Se configurado no EasyPanel, deixe em branco.
-              </p>
-
               <label style={labelStyle}>Seu papel / profissão</label>
               <input
                 value={form.aiRole || ''}
