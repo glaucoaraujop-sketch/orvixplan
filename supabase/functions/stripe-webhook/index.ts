@@ -19,6 +19,14 @@ const supabase = createClient(
 
 const addMonths = (d: Date, n: number) => { const x = new Date(d); x.setMonth(x.getMonth() + n); return x }
 
+// A subscription da invoice mudou de lugar entre versões da API do Stripe.
+const subDaInvoice = (inv: any): string | null =>
+  inv.subscription
+  ?? inv.parent?.subscription_details?.subscription
+  ?? inv.lines?.data?.[0]?.subscription
+  ?? inv.lines?.data?.[0]?.parent?.subscription_item_details?.subscription
+  ?? null
+
 async function registrar(ev: any, userId: string | null, tipo: string, extra: Record<string, any>) {
   await supabase.from('assinaturas').insert({
     stripe_event_id: ev.id,
@@ -88,12 +96,13 @@ Deno.serve(async (req) => {
       // ─── Renovação mensal paga ──────────────────────────────────────────────
       case 'invoice.paid': {
         const inv = event.data.object
-        if (!inv.subscription) { await registrar(event, null, 'renovacao', { status: 'sem_sub' }); break }
-        const sub = await stripe.subscriptions.retrieve(String(inv.subscription))
+        const subId = subDaInvoice(inv)
+        if (!subId) { await registrar(event, null, 'renovacao', { status: 'sem_sub' }); break }
+        const sub = await stripe.subscriptions.retrieve(subId)
         const periodoFim = new Date(sub.current_period_end * 1000)
 
         const { data: u } = await supabase.from('users')
-          .select('id').eq('stripe_subscription_id', String(inv.subscription)).maybeSingle()
+          .select('id').eq('stripe_subscription_id', subId).maybeSingle()
 
         if (u) {
           await supabase.from('users').update({
@@ -102,7 +111,7 @@ Deno.serve(async (req) => {
           }).eq('id', u.id)
         }
         await registrar(event, u?.id ?? null, 'renovacao', {
-          stripe_subscription_id: String(inv.subscription),
+          stripe_subscription_id: subId,
           valor_centavos: inv.amount_paid ?? null, status: 'ativo',
           periodo_fim: periodoFim.toISOString(),
         })
@@ -112,11 +121,13 @@ Deno.serve(async (req) => {
       // ─── Falha de pagamento → inadimplente (acesso segue até expirar) ───────
       case 'invoice.payment_failed': {
         const inv = event.data.object
-        const { data: u } = await supabase.from('users')
-          .select('id').eq('stripe_subscription_id', String(inv.subscription)).maybeSingle()
+        const subId = subDaInvoice(inv)
+        const { data: u } = subId
+          ? await supabase.from('users').select('id').eq('stripe_subscription_id', subId).maybeSingle()
+          : { data: null }
         if (u) await supabase.from('users').update({ status: 'inadimplente' }).eq('id', u.id)
         await registrar(event, u?.id ?? null, 'falha', {
-          stripe_subscription_id: inv.subscription ? String(inv.subscription) : null, status: 'inadimplente',
+          stripe_subscription_id: subId, status: 'inadimplente',
         })
         break
       }
