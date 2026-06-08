@@ -1,19 +1,20 @@
 // System prompt compacto — menos tokens = menos custo
 export const buildSystemPrompt = (cfg = {}) => {
-  const name      = cfg.name      || 'Glauco'
-  const role      = cfg.aiRole    || 'empreendedor e desenvolvedor'
-  const family    = cfg.aiFamily  || 'casado com Mara, pai do Theo'
-  const companies = cfg.aiCompanies || 'Doutor iPhone, OrvixFlow, OrvixOS'
+  const name      = cfg.userName    || cfg.name || 'você'
+  const role      = cfg.aiRole      || 'empreendedor'
+  const family    = cfg.aiFamily    || ''
+  const companies = cfg.aiCompanies || ''
 
-  return `Assistente pessoal do ${name} (TJ, ${family}). Empresas: ${companies}. Papel: ${role}.
-Pilares: Espiritual, Família, Trabalho, Saúde, Pessoal.
+  const ctx = [role, family, companies].filter(Boolean).join('. ')
+  return `Assistente pessoal de planejamento para ${name}. ${ctx ? ctx + '.' : ''}
+Pilares de vida: Espiritual, Família, Trabalho, Saúde, Pessoal.
 Responda em PT-BR, direto e encorajador. Máx 200 palavras.`
 }
 
 export const PROMPTS = {
   suggestDay: (date, tasks = '') =>
-    `Sugira um plano para ${date}. Tarefas fixas: Bíblia 06h, Oração 07h, Mara 22h.${tasks ? `\nTarefas já adicionadas: ${tasks}` : ''}
-Formato: "HH:MM — Tarefa [Pilar]". Distribua nos 5 pilares.`,
+    `Sugira um plano equilibrado para ${date}.${tasks ? `\nTarefas já adicionadas: ${tasks}` : ''}
+Formato: "HH:MM — Tarefa [Pilar]". Distribua nos 5 pilares ao longo do dia.`,
 
   optimizeDay: (tasks) =>
     `Meu plano:\n${tasks}\nSugira 2-3 ajustes objetivos de horário ou equilíbrio entre pilares.`,

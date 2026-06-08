@@ -155,7 +155,7 @@ export function LoginView({ onSignIn }) {
         </div>
 
         <p style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: '#9CA3AF' }}>
-          Orvix Tecnologia · Glauco Ferreira
+          Orvix Tecnologia
         </p>
       </div>
     </div>

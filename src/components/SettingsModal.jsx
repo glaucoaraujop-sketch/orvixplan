@@ -141,7 +141,7 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, userEmail 
               <input
                 value={form.aiFamily || ''}
                 onChange={(e) => set('aiFamily', e.target.value)}
-                placeholder="ex: marido da Mara e pai do Theo"
+                placeholder="ex: casado, pai de dois filhos"
                 style={inputStyle}
               />
             </>
