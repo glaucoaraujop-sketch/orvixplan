@@ -1,0 +1,19 @@
+name: Deploy OrvixPlan
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image (verificação)
+        run: docker build --build-arg VITE_ANTHROPIC_KEY=test .
+
+      - name: Trigger EasyPanel deploy
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.EASYPANEL_WEBHOOK }}"
