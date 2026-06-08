@@ -28,7 +28,7 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
 
   const { tasks: allTasks, checks, notes: savedNotes } = getDay(date)
 
-  const notify = useNotifications(allTasks, date)
+  const notify = useNotifications()
 
   // Sync notes when date changes
   useEffect(() => {
@@ -143,7 +143,7 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
                 !notify.supported
                   ? 'Notificações indisponíveis neste dispositivo'
                   : notify.enabled
-                    ? `${notify.count} lembrete(s) agendado(s) — toque para desativar`
+                    ? 'Lembretes ativos — toque para desativar'
                     : 'Ativar lembretes de tarefas'
               }
               style={{
@@ -174,22 +174,13 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, save
         </div>
 
         {/* Notification hint */}
-        {notify.enabled && tasksWithTime > 0 && (
+        {notify.enabled && (
           <div style={{
             fontSize: 11, color: '#6B7280',
             background: '#F5F3FF', borderRadius: 8, padding: '6px 10px',
             marginBottom: 10,
           }}>
-            🔔 {notify.count} lembrete{notify.count !== 1 ? 's' : ''} agendado{notify.count !== 1 ? 's' : ''} para hoje
-          </div>
-        )}
-        {notify.enabled && tasksWithTime === 0 && (
-          <div style={{
-            fontSize: 11, color: '#9CA3AF',
-            background: '#F9FAFB', borderRadius: 8, padding: '6px 10px',
-            marginBottom: 10,
-          }}>
-            Adicione horário às tarefas para receber lembretes
+            🔔 Lembretes ativos — você receberá notificações no horário de cada tarefa
           </div>
         )}
         {notify.permission === 'denied' && (
