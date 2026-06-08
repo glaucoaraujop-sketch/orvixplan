@@ -2,11 +2,13 @@ import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useSupabaseStore } from './hooks/useSupabaseStore.js'
 import { useAI } from './hooks/useAI.js'
+import { useAccess } from './hooks/useAccess.js'
 import { DailyView } from './views/DailyView.jsx'
 import { WeeklyView } from './views/WeeklyView.jsx'
 import { MonthlyView } from './views/MonthlyView.jsx'
 import { LoginView } from './views/LoginView.jsx'
 import { SettingsModal } from './components/SettingsModal.jsx'
+import { PricingModal } from './components/PricingModal.jsx'
 import { DEFAULT_SETTINGS } from './constants/defaults.js'
 import { MONTHS_PT, formatDateFull, addDays, getWeekDays, dateKey } from './utils/dateUtils.js'
 
@@ -27,11 +29,26 @@ export default function App() {
   const [view,         setView]         = useState('daily')
   const [settings,     setSettings]     = useState(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
+  const [showPricing,  setShowPricing]  = useState(false)
 
   const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, fixedTasks, addFixedTask, removeFixedTask } =
     useSupabaseStore(user?.id)
 
+  const access = useAccess(user?.id)
   const ai = useAI(settings)
+
+  // Retorno do checkout do Stripe: revalida acesso (webhook pode levar 1–2s) e limpa a URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('checkout') === 'sucesso') {
+      const t = setTimeout(() => access.refresh(), 2000)
+      window.history.replaceState({}, '', window.location.pathname)
+      return () => clearTimeout(t)
+    }
+    if (params.get('checkout') === 'cancelado') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, []) // eslint-disable-line
 
   // Load today on mount
   useEffect(() => {
@@ -81,6 +98,19 @@ export default function App() {
 
   // Not authenticated
   if (!user) return <LoginView onSignIn={signIn} onVerifyOtp={verifyOtp} />
+
+  // Acesso expirado (trial vencido ou Pro não renovado) → paywall bloqueante
+  if (!access.loading && !access.ativo) {
+    return (
+      <PricingModal
+        bloqueante
+        motivo={access.plano === 'expirado'
+          ? 'Seu período acabou. Escolha um plano para continuar planejando.'
+          : 'Ative um plano para liberar todos os recursos.'}
+        onSignOut={signOut}
+      />
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F0F1FF' }}>
@@ -165,6 +195,22 @@ export default function App() {
         </div>
       </header>
 
+      {/* Banner de trial / inadimplência */}
+      {access.plano === 'trial' && (
+        <div style={bannerStyle('#EEF0FF', '#4338CA')}>
+          <span>
+            🎁 Teste grátis — {access.diasRestantes} {access.diasRestantes === 1 ? 'dia restante' : 'dias restantes'}
+          </span>
+          <button onClick={() => setShowPricing(true)} style={bannerBtn}>Assinar</button>
+        </div>
+      )}
+      {access.status === 'inadimplente' && (
+        <div style={bannerStyle('#FEF2F2', '#DC2626')}>
+          <span>⚠️ Pagamento pendente — regularize para manter o acesso</span>
+          <button onClick={() => setShowPricing(true)} style={{ ...bannerBtn, background: '#DC2626' }}>Resolver</button>
+        </div>
+      )}
+
       {/* Date navigation */}
       <div
         style={{
@@ -244,8 +290,24 @@ export default function App() {
           removeFixedTask={removeFixedTask}
         />
       )}
+
+      {showPricing && (
+        <PricingModal onClose={() => setShowPricing(false)} />
+      )}
     </div>
   )
+}
+
+const bannerStyle = (bg, color) => ({
+  background: bg, color,
+  padding: '8px 20px', fontSize: 13, fontWeight: 600,
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+  flexWrap: 'wrap',
+})
+const bannerBtn = {
+  padding: '4px 14px', borderRadius: 7, border: 'none',
+  background: '#4338CA', color: 'white', fontSize: 12, fontWeight: 700,
+  cursor: 'pointer', fontFamily: 'inherit',
 }
 
 const navBtnStyle = {
