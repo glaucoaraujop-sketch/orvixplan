@@ -1,13 +1,12 @@
 import { useState } from 'react'
 
-export function LoginView({ onSignIn, onVerifyOtp }) {
+export function LoginView({ onSignIn }) {
   const [email,   setEmail]   = useState('')
-  const [code,    setCode]    = useState('')
-  const [step,    setStep]    = useState('email') // 'email' | 'code'
+  const [sent,    setSent]    = useState(false)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
 
-  const submitEmail = async (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     if (!email.trim()) return
     setLoading(true)
@@ -15,24 +14,10 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
     try {
       const { error: err } = await onSignIn(email.trim())
       if (err) throw err
-      setStep('code')
+      setSent(true)
     } catch (err) {
-      setError(err.message || 'Erro ao enviar código. Tente novamente.')
+      setError(err.message || 'Erro ao enviar link. Tente novamente.')
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const submitCode = async (e) => {
-    e.preventDefault()
-    if (code.trim().length < 6) return
-    setLoading(true)
-    setError(null)
-    try {
-      const { error: err } = await onVerifyOtp(email.trim(), code.trim())
-      if (err) throw err
-    } catch (err) {
-      setError(err.message || 'Código inválido ou expirado. Tente novamente.')
       setLoading(false)
     }
   }
@@ -49,7 +34,6 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
       }}
     >
       <div style={{ width: '100%', maxWidth: 400 }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div
             style={{
@@ -72,7 +56,6 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
           </p>
         </div>
 
-        {/* Card */}
         <div
           style={{
             background: 'white',
@@ -82,16 +65,37 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
             border: '1px solid #EEF0FF',
           }}
         >
-          {step === 'email' ? (
+          {sent ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1E1B4B', marginBottom: 8 }}>
+                Link enviado!
+              </h2>
+              <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6 }}>
+                Verifique <strong>{email}</strong> e clique no link.<br />
+                A sessão ficará ativa por até 60 dias.
+              </p>
+              <button
+                onClick={() => { setSent(false); setEmail('') }}
+                style={{
+                  marginTop: 20, background: 'none', border: 'none',
+                  color: '#4338CA', fontSize: 13, cursor: 'pointer',
+                  fontFamily: 'inherit', textDecoration: 'underline',
+                }}
+              >
+                Usar outro email
+              </button>
+            </div>
+          ) : (
             <>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1E1B4B', marginBottom: 6 }}>
                 Entrar
               </h2>
               <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 22 }}>
-                Você vai receber um código de 6 dígitos no email.
+                Você vai receber um link de acesso no email.
               </p>
 
-              <form onSubmit={submitEmail}>
+              <form onSubmit={submit}>
                 <label style={labelStyle}>Email</label>
                 <input
                   type="email"
@@ -102,62 +106,29 @@ export function LoginView({ onSignIn, onVerifyOtp }) {
                   style={inputStyle}
                 />
 
-                {error && <div style={errorStyle}>{error}</div>}
+                {error && (
+                  <div style={{
+                    padding: '8px 12px', background: '#FEF2F2',
+                    borderRadius: 8, fontSize: 13, color: '#DC2626', marginBottom: 14,
+                  }}>
+                    {error}
+                  </div>
+                )}
 
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  style={{ ...btnStyle, background: loading ? '#A5B4FC' : '#4338CA' }}
+                  style={{
+                    width: '100%', padding: 12, borderRadius: 10, border: 'none',
+                    background: loading ? '#A5B4FC' : '#4338CA',
+                    color: 'white', fontSize: 14, fontWeight: 600,
+                    cursor: loading ? 'default' : 'pointer',
+                    fontFamily: 'inherit', transition: 'background .15s',
+                  }}
                 >
-                  {loading ? 'Enviando…' : 'Enviar código'}
+                  {loading ? 'Enviando…' : 'Enviar link de acesso'}
                 </button>
               </form>
-            </>
-          ) : (
-            <>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1E1B4B', marginBottom: 6 }}>
-                Digite o código
-              </h2>
-              <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 22 }}>
-                Enviamos um código para <strong>{email}</strong>
-              </p>
-
-              <form onSubmit={submitCode}>
-                <label style={labelStyle}>Código de 6 dígitos</label>
-                <input
-                  type="text"
-                  autoFocus
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="000000"
-                  style={{ ...inputStyle, letterSpacing: 6, fontSize: 22, textAlign: 'center' }}
-                />
-
-                {error && <div style={errorStyle}>{error}</div>}
-
-                <button
-                  type="submit"
-                  disabled={loading || code.trim().length < 6}
-                  style={{ ...btnStyle, background: loading ? '#A5B4FC' : '#4338CA' }}
-                >
-                  {loading ? 'Verificando…' : 'Entrar'}
-                </button>
-              </form>
-
-              <button
-                onClick={() => { setStep('email'); setCode(''); setError(null) }}
-                style={{
-                  width: '100%', marginTop: 10,
-                  background: 'none', border: 'none',
-                  color: '#6B7280', fontSize: 13,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >
-                Usar outro email
-              </button>
             </>
           )}
         </div>
@@ -182,18 +153,4 @@ const inputStyle = {
   fontSize: 14, fontFamily: 'inherit',
   outline: 'none', color: '#1E1B4B',
   marginBottom: 16, display: 'block',
-}
-
-const btnStyle = {
-  width: '100%', padding: 12,
-  borderRadius: 10, border: 'none',
-  color: 'white', fontSize: 14, fontWeight: 600,
-  cursor: 'pointer', fontFamily: 'inherit',
-  transition: 'background .15s',
-}
-
-const errorStyle = {
-  padding: '8px 12px', background: '#FEF2F2',
-  borderRadius: 8, fontSize: 13, color: '#DC2626',
-  marginBottom: 14,
 }

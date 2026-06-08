@@ -22,7 +22,7 @@ const VIEWS = [
 ]
 
 export default function App() {
-  const { user, loading: authLoading, signIn, verifyOtp, signOut } = useAuth()
+  const { user, loading: authLoading, signIn, signOut } = useAuth()
   const [date,         setDate]         = useState(new Date())
   const [view,         setView]         = useState('daily')
   const [settings,     setSettings]     = useState(loadSettings)
@@ -80,7 +80,7 @@ export default function App() {
   }
 
   // Not authenticated
-  if (!user) return <LoginView onSignIn={signIn} onVerifyOtp={verifyOtp} />
+  if (!user) return <LoginView onSignIn={signIn} />
 
   return (
     <div style={{ minHeight: '100vh', background: '#F0F1FF' }}>

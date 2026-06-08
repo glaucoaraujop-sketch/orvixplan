@@ -7,4 +7,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   db: { schema: 'orvixplan' },
+  auth: {
+    flowType: 'implicit',   // token vem direto na URL hash — sem PKCE, sem problema de aba nova
+    persistSession: true,
+    autoRefreshToken: true,
+  },
 })
