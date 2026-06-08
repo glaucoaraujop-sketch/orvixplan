@@ -115,10 +115,14 @@ serve(async (req) => {
   const timeStr = `${hh}:${mm}`
   const today   = now.toISOString().slice(0, 10)
 
-  const [{ data: fixed }, { data: daily }] = await Promise.all([
-    supabase.from('fixed_tasks').select('user_id, label').eq('active', true).like('time_of_day', `${timeStr}%`),
-    supabase.from('day_tasks').select('user_id, label').eq('date', today).like('time_of_day', `${timeStr}%`),
+  // Range match on the time column (LIKE fails on `time` type — operator doesn't exist).
+  const fromT = `${timeStr}:00`
+  const toT   = `${timeStr}:59`
+  const [{ data: fixed, error: ef }, { data: daily, error: ed }] = await Promise.all([
+    supabase.from('fixed_tasks').select('user_id, label').eq('active', true).gte('time_of_day', fromT).lte('time_of_day', toT),
+    supabase.from('day_tasks').select('user_id, label').eq('date', today).gte('time_of_day', fromT).lte('time_of_day', toT),
   ])
+  if (ef || ed) console.error('[push] query error', ef?.message, ed?.message)
 
   const due = [...(fixed ?? []), ...(daily ?? [])]
   if (!due.length) return new Response(`Nenhuma tarefa às ${timeStr}`, { status: 200 })
