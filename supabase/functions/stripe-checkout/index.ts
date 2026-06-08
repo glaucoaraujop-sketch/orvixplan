@@ -15,7 +15,7 @@ const CORS = {
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
-const APP_URL = Deno.env.get('APP_URL') ?? 'https://orvixplan.com'
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://plan.orvixos.com.br'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
