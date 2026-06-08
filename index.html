@@ -2,7 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>OrvixPlan</title>
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/icon.svg" />
@@ -22,8 +22,16 @@
         background: #F0F1FF;
         color: #1E1B4B;
         -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: 100%;
       }
       #root { height: 100%; }
+      /* Prevent iOS auto-zoom on input focus (requires font-size >= 16px) */
+      input, textarea, select { font-size: 16px; }
+      /* Remove tap highlight flash and double-tap zoom delay on all interactive elements */
+      button, a, [role="button"] {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
       ::-webkit-scrollbar { width: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #C7D2FE; border-radius: 3px; }
