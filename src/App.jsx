@@ -28,7 +28,7 @@ export default function App() {
   const [settings,     setSettings]     = useState(loadSettings)
   const [showSettings, setShowSettings] = useState(false)
 
-  const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck } =
+  const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal } =
     useSupabaseStore(user?.id)
 
   const ai = useAI(settings)
@@ -209,6 +209,7 @@ export default function App() {
             addTask={addTask}
             deleteTask={deleteTask}
             toggleCheck={toggleCheck}
+            saveJournal={saveJournal}
             ai={ai}
             settings={settings}
           />

@@ -41,13 +41,14 @@ export function useSupabaseStore(userId) {
       if (!fresh.length) return
       fresh.forEach((dk) => loadedDates.current.add(dk))
 
-      const [tasksRes, checksRes] = await Promise.all([
+      const [tasksRes, checksRes, journalRes] = await Promise.all([
         supabase.from('day_tasks').select('*').eq('user_id', userId).in('date', fresh),
         supabase.from('day_checks').select('*').eq('user_id', userId).in('date', fresh),
+        supabase.from('day_journal').select('*').eq('user_id', userId).in('date', fresh),
       ])
 
       const patch = {}
-      fresh.forEach((dk) => { patch[dk] = { tasks: [], checks: {} } })
+      fresh.forEach((dk) => { patch[dk] = { tasks: [], checks: {}, notes: '' } })
 
       ;(tasksRes.data || []).forEach((t) => {
         if (patch[t.date]) patch[t.date].tasks.push(toTask(t, false))
@@ -55,6 +56,9 @@ export function useSupabaseStore(userId) {
       ;(checksRes.data || []).forEach((c) => {
         const id = c.task_id || c.fixed_task_id
         if (patch[c.date] && id) patch[c.date].checks[id] = c.completed
+      })
+      ;(journalRes.data || []).forEach((j) => {
+        if (patch[j.date]) patch[j.date].notes = j.notes || ''
       })
 
       setDayData((prev) => ({ ...prev, ...patch }))
@@ -71,13 +75,28 @@ export function useSupabaseStore(userId) {
   const getDay = useCallback(
     (date) => {
       const dk = dateKey(date)
-      const dd = dayData[dk] || { tasks: [], checks: {} }
+      const dd = dayData[dk] || { tasks: [], checks: {}, notes: '' }
       const tasks = [...fixedTasks, ...dd.tasks].sort(
         (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'),
       )
-      return { tasks, checks: dd.checks }
+      return { tasks, checks: dd.checks, notes: dd.notes }
     },
     [fixedTasks, dayData],
+  )
+
+  const saveJournal = useCallback(
+    async (date, notes) => {
+      const dk = dateKey(date)
+      setDayData((prev) => ({
+        ...prev,
+        [dk]: { ...(prev[dk] || { tasks: [], checks: {} }), notes },
+      }))
+      await supabase.from('day_journal').upsert(
+        { user_id: userId, date: dk, notes, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,date' },
+      )
+    },
+    [userId],
   )
 
   const addTask = useCallback(
@@ -169,5 +188,5 @@ export function useSupabaseStore(userId) {
     [userId, dayData],
   )
 
-  return { loading, fixedTasks, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck }
+  return { loading, fixedTasks, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal }
 }

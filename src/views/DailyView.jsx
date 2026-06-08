@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { TaskRow } from '../components/TaskRow.jsx'
 import { AddTaskForm } from '../components/AddTaskForm.jsx'
 import { AIPanel } from '../components/AIPanel.jsx'
@@ -14,14 +14,39 @@ const AI_MODES = [
   { id: 'chat',     label: 'Chat',         icon: '💬' },
 ]
 
-export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, ai, settings }) {
-  const [showForm,   setShowForm]   = useState(false)
-  const [aiResponse, setAiResponse] = useState(null)
-  const [aiMode,     setAiMode]     = useState(null)
-  const [chatMsg,    setChatMsg]    = useState('')
-  const [chatHistory,setChatHistory]= useState([])
+export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, saveJournal, ai, settings }) {
+  const [showForm,    setShowForm]    = useState(false)
+  const [aiResponse,  setAiResponse]  = useState(null)
+  const [aiMode,      setAiMode]      = useState(null)
+  const [chatMsg,     setChatMsg]     = useState('')
+  const [chatHistory, setChatHistory] = useState([])
+  const [notes,       setNotes]       = useState('')
+  const [saveStatus,  setSaveStatus]  = useState(null) // 'saving' | 'saved' | null
+  const saveTimer  = useRef(null)
+  const prevDateRef = useRef(null)
 
-  const { tasks: allTasks, checks } = getDay(date)
+  // Sync notes when date changes
+  useEffect(() => {
+    if (prevDateRef.current !== date.toDateString()) {
+      prevDateRef.current = date.toDateString()
+      setNotes(savedNotes || '')
+      setSaveStatus(null)
+      clearTimeout(saveTimer.current)
+    }
+  }, [date, savedNotes])
+
+  const handleNotesChange = (e) => {
+    const val = e.target.value
+    setNotes(val)
+    setSaveStatus('saving')
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      await saveJournal(date, val)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus(null), 2000)
+    }, 1500)
+  }
+
   const pct       = calcDayPct(allTasks, checks)
   const byPillar  = calcPillarBreakdown(allTasks, checks)
 
@@ -287,6 +312,44 @@ export function DailyView({ date, getDay, addTask, deleteTask, toggleCheck, ai, 
             ))}
           </div>
         )}
+      </div>
+
+      {/* Journal */}
+      <div style={{
+        background: 'white', borderRadius: 14,
+        padding: '16px 18px', marginTop: 14,
+        border: '1px solid #EEF0FF',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            📝 Diário do dia
+          </p>
+          {saveStatus === 'saving' && (
+            <span style={{ fontSize: 11, color: '#9CA3AF' }}>Salvando…</span>
+          )}
+          {saveStatus === 'saved' && (
+            <span style={{ fontSize: 11, color: '#16A34A' }}>✓ Salvo</span>
+          )}
+        </div>
+        <textarea
+          value={notes}
+          onChange={handleNotesChange}
+          placeholder="Como foi seu dia? Coisas boas, dificuldades, estresse, pendências, aprendizados…"
+          rows={5}
+          style={{
+            width: '100%',
+            border: '1.5px solid #E0E7FF',
+            borderRadius: 10,
+            padding: '10px 12px',
+            fontSize: 14,
+            fontFamily: 'inherit',
+            lineHeight: 1.6,
+            color: '#1E1B4B',
+            resize: 'vertical',
+            outline: 'none',
+            display: 'block',
+          }}
+        />
       </div>
     </div>
   )
