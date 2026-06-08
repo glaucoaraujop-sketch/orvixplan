@@ -23,16 +23,16 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return json({ error: 'Não autorizado' }, 401)
 
-    // ─── Gate de plano + teto de IA ──────────────────────────────────────────
+    // ─── Gate: app ativo + saldo de créditos de IA ───────────────────────────
     const { data: acesso } = await supabase.rpc('meu_acesso')
     if (!acesso?.ativo) {
-      return json({ error: 'Plano inativo ou expirado', code: 'PLANO_INATIVO' }, 402)
+      return json({ error: 'Acesso inativo', code: 'PLANO_INATIVO' }, 402)
     }
-    if ((acesso.ia_usadas ?? 0) >= (acesso.ia_limite ?? 0)) {
+    if ((acesso.ia_creditos ?? 0) <= 0) {
       return json({
-        error: `Limite de ${acesso.ia_limite} usos de IA do mês atingido`,
+        error: 'Seus créditos de IA acabaram',
         code: 'LIMITE_IA',
-        ia_limite: acesso.ia_limite, ia_usadas: acesso.ia_usadas,
+        ia_creditos: 0,
       }, 429)
     }
 
@@ -53,15 +53,14 @@ serve(async (req) => {
 
     const data = await res.json()
 
-    // ─── Contabiliza o uso só quando a chamada deu certo ─────────────────────
+    // ─── Gasta 1 crédito só quando a chamada deu certo ───────────────────────
     if (res.ok) {
-      const mes = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 7) // YYYY-MM (BRT)
       const svc = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
         { db: { schema: 'orvixplan' } },
       )
-      await svc.rpc('incrementar_uso_ia', { p_user_id: user.id, p_mes: mes })
+      await svc.rpc('consumir_credito_ia', { p_user_id: user.id })
     }
 
     return json(data, res.status)

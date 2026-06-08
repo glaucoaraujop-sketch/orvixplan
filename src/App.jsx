@@ -32,12 +32,16 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [showPricing,  setShowPricing]  = useState(false)
   const [showLogin,    setShowLogin]    = useState(false)
+  const [showIAPack,   setShowIAPack]   = useState(false)
 
   const { loading: storeLoading, getDay, loadDate, loadDateRange, addTask, deleteTask, toggleCheck, saveJournal, fixedTasks, addFixedTask, removeFixedTask } =
     useSupabaseStore(user?.id)
 
   const access = useAccess(user?.id)
   const ai = useAI(settings)
+
+  // IA sem créditos → abre o modal de compra do pacote
+  useEffect(() => { if (ai.limiteIA) setShowIAPack(true) }, [ai.limiteIA])
 
   // Retorno do checkout do Stripe: revalida acesso (webhook pode levar 1–2s) e limpa a URL
   useEffect(() => {
@@ -105,14 +109,13 @@ export default function App() {
       : <LandingView onStart={() => setShowLogin(true)} />
   }
 
-  // Acesso expirado (trial vencido ou Pro não renovado) → paywall bloqueante
+  // Sem acesso ao app → paywall bloqueante R$37 (pagamento único pra entrar)
   if (!access.loading && !access.ativo) {
     return (
       <PricingModal
         bloqueante
-        motivo={access.plano === 'expirado'
-          ? 'Seu período acabou. Escolha um plano para continuar planejando.'
-          : 'Ative um plano para liberar todos os recursos.'}
+        modo="app"
+        motivo="Pague uma vez e use o OrvixPlan para sempre — sem mensalidade."
         onSignOut={signOut}
       />
     )
@@ -201,13 +204,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* Banner de trial / inadimplência */}
-      {access.plano === 'trial' && (
-        <div style={bannerStyle('#EEF0FF', '#4338CA')}>
-          <span>
-            🎁 Teste grátis — {access.diasRestantes} {access.diasRestantes === 1 ? 'dia restante' : 'dias restantes'}
-          </span>
-          <button onClick={() => setShowPricing(true)} style={bannerBtn}>Liberar por R$ 37</button>
+      {/* Saldo de créditos de IA */}
+      {!access.loading && (
+        <div style={bannerStyle(access.iaCreditos > 0 ? '#EEF0FF' : '#FEF2F2', access.iaCreditos > 0 ? '#4338CA' : '#DC2626')}>
+          <span>🤖 {access.iaCreditos} {access.iaCreditos === 1 ? 'uso de IA' : 'usos de IA'} {access.iaCreditos === 0 ? '— acabaram' : 'restantes'}</span>
+          <button onClick={() => setShowIAPack(true)} style={bannerBtn}>Comprar 100 · R$ 29,90</button>
         </div>
       )}
 
@@ -292,7 +293,14 @@ export default function App() {
       )}
 
       {showPricing && (
-        <PricingModal onClose={() => setShowPricing(false)} />
+        <PricingModal modo="app" onClose={() => setShowPricing(false)} />
+      )}
+
+      {showIAPack && (
+        <PricingModal
+          modo="ia"
+          onClose={() => { setShowIAPack(false); ai.clearLimiteIA(); access.refresh() }}
+        />
       )}
     </div>
   )

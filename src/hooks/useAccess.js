@@ -19,20 +19,18 @@ export function useAccess(userId) {
 
   return {
     loading,
-    ativo:         acesso?.ativo ?? false,
-    plano:         acesso?.plano ?? null,
-    status:        acesso?.status ?? null,
-    ciclo:         acesso?.ciclo ?? null,
-    diasRestantes: acesso?.dias_restantes ?? 0,
-    iaUsadas:      acesso?.ia_usadas ?? 0,
-    iaLimite:      acesso?.ia_limite ?? 0,
+    ativo:      acesso?.ativo ?? false,
+    plano:      acesso?.plano ?? null,
+    status:     acesso?.status ?? null,
+    ciclo:      acesso?.ciclo ?? null,
+    iaCreditos: acesso?.ia_creditos ?? 0,
     refresh,
   }
 }
 
-// Abre o checkout do Stripe (pagamento único vitalício) e redireciona.
-export async function irParaCheckout() {
-  const { data, error } = await supabase.functions.invoke('stripe-checkout', { body: {} })
+// Abre o checkout do Stripe. produto: 'app' (R$37) | 'ia_pack' (R$29,90).
+export async function irParaCheckout(produto = 'app') {
+  const { data, error } = await supabase.functions.invoke('stripe-checkout', { body: { produto } })
   if (error || !data?.url) throw new Error(data?.error || 'Erro ao abrir checkout')
   window.location.href = data.url
 }

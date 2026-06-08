@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { irParaCheckout } from '../hooks/useAccess.js'
 
-// Paywall — oferta única: pagamento único R$37 (vitalício).
-// `bloqueante` esconde o botão de fechar (trial expirado).
-export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut }) {
+// Paywall. modo: 'app' (R$37 vitalício) | 'ia' (R$29,90 → 100 usos de IA).
+// `bloqueante` esconde o botão de fechar (acesso obrigatório).
+export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, modo = 'app' }) {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState(null)
+  const isIA = modo === 'ia'
 
   const comprar = async () => {
     setErro(null)
     setLoading(true)
-    try { await irParaCheckout() }
+    try { await irParaCheckout(isIA ? 'ia_pack' : 'app') }
     catch (e) { setErro(e.message); setLoading(false) }
   }
 
@@ -22,36 +23,49 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut })
         )}
 
         <div style={{ textAlign: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 32 }}>🚀</div>
+          <div style={{ fontSize: 32 }}>{isIA ? '🤖' : '🚀'}</div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1E1B4B', margin: '8px 0 4px' }}>
-            {bloqueante ? 'Seu teste acabou' : 'Desbloqueie o OrvixPlan'}
+            {isIA ? 'Seus créditos de IA acabaram' : 'Desbloqueie o OrvixPlan'}
           </h2>
           <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.5 }}>
-            {motivo || 'Pague uma vez e use para sempre — sem mensalidade, sem renovação.'}
+            {motivo || (isIA
+              ? 'Compre mais 100 usos da IA. Valem até acabar — sem prazo, sem mensalidade.'
+              : 'Pague uma vez e use para sempre — sem mensalidade, sem renovação.')}
           </p>
         </div>
 
-        {/* Oferta única — vitalício */}
         <div style={{ ...card, borderColor: '#4338CA', position: 'relative' }}>
-          <span style={badge}>PAGAMENTO ÚNICO</span>
+          <span style={badge}>{isIA ? '100 USOS DE IA' : 'PAGAMENTO ÚNICO'}</span>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
             <span style={{ fontSize: 14, color: '#9CA3AF' }}>R$</span>
-            <span style={{ fontWeight: 800, fontSize: 40, color: '#4338CA', lineHeight: 1 }}>37</span>
+            <span style={{ fontWeight: 800, fontSize: 40, color: '#4338CA', lineHeight: 1 }}>
+              {isIA ? '29,90' : '37'}
+            </span>
           </div>
           <p style={{ fontSize: 12, color: '#16A34A', textAlign: 'center', fontWeight: 600, margin: '4px 0 12px' }}>
-            ✓ Acesso vitalício · pague uma vez só
+            {isIA ? '✓ 100 usos · sem prazo de validade' : '✓ Acesso vitalício · pague uma vez só'}
           </p>
 
           <ul style={beneficios}>
-            <li>📅 Planejamento diário, semanal e mensal</li>
-            <li>🎯 Categorias de vida (espiritual, família, trabalho…)</li>
-            <li>🔔 Lembretes automáticos no horário de cada tarefa</li>
-            <li>✨ Assistente de IA para organizar seu dia</li>
-            <li>📝 Diário e acompanhamento de progresso</li>
+            {isIA ? (
+              <>
+                <li>✨ 100 usos do assistente de IA</li>
+                <li>♾️ Sem prazo — usa quando quiser</li>
+                <li>🔁 Acabou? É só comprar outro pacote</li>
+              </>
+            ) : (
+              <>
+                <li>📅 Planejamento diário, semanal e mensal</li>
+                <li>🎯 9 categorias de vida</li>
+                <li>🔔 Lembretes automáticos por notificação</li>
+                <li>✨ 7 usos de IA inclusos pra começar</li>
+                <li>📝 Diário e progresso</li>
+              </>
+            )}
           </ul>
 
           <button onClick={comprar} disabled={loading} style={btnPrimary}>
-            {loading ? 'Abrindo…' : 'Liberar acesso vitalício'}
+            {loading ? 'Abrindo…' : (isIA ? 'Comprar 100 usos' : 'Liberar acesso vitalício')}
           </button>
         </div>
 

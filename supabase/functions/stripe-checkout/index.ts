@@ -32,8 +32,9 @@ Deno.serve(async (req) => {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) return json({ error: 'Não autorizado' }, 401)
 
-  // Produto único: pagamento único vitalício
-  const ciclo = 'vitalicio'
+  // produto: 'app' (R$37 vitalício) | 'ia_pack' (R$29,90 → 100 créditos de IA)
+  const { produto = 'app' } = await req.json().catch(() => ({ produto: 'app' }))
+  const isIaPack = produto === 'ia_pack'
 
   // Reaproveita o customer do Stripe se já existir
   const { data: perfil } = await supabase
@@ -43,7 +44,7 @@ Deno.serve(async (req) => {
     client_reference_id: user.id,
     customer: perfil?.stripe_customer_id || undefined,
     customer_email: perfil?.stripe_customer_id ? undefined : (perfil?.email || user.email),
-    metadata: { user_id: user.id, ciclo },
+    metadata: { user_id: user.id, produto, ciclo: isIaPack ? 'ia_pack' : 'vitalicio' },
     success_url: `${APP_URL}/?checkout=sucesso`,
     cancel_url: `${APP_URL}/?checkout=cancelado`,
     allow_promotion_codes: true,
@@ -51,15 +52,16 @@ Deno.serve(async (req) => {
 
   let session
   try {
-    // Oferta única: pagamento único R$ 37,00 → acesso vitalício
     session = await stripe.checkout.sessions.create({
       ...common,
       mode: 'payment',
       line_items: [{
         price_data: {
           currency: 'brl',
-          unit_amount: 3700,
-          product_data: { name: 'OrvixPlan — Acesso Vitalício' },
+          unit_amount: isIaPack ? 2990 : 3700,
+          product_data: {
+            name: isIaPack ? 'OrvixPlan — 100 usos de IA' : 'OrvixPlan — Acesso Vitalício',
+          },
         },
         quantity: 1,
       }],

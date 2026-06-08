@@ -63,6 +63,16 @@ Deno.serve(async (req) => {
         const userId = s.client_reference_id || s.metadata?.user_id || null
         if (!userId) { await registrar(event, null, 'checkout', { status: 'sem_user_id' }); break }
 
+        // Pacote de créditos de IA (R$29,90 → +100 usos) — não mexe no plano
+        if (s.metadata?.produto === 'ia_pack') {
+          await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 100 })
+          await registrar(event, userId, 'ia_pack', {
+            valor_centavos: s.amount_total ?? null, status: 'ativo',
+            stripe_customer_id: s.customer ? String(s.customer) : null,
+          })
+          break
+        }
+
         const ciclo = s.metadata?.ciclo || (s.mode === 'subscription' ? 'mensal' : 'vitalicio')
         let periodoFim: Date
         let subId: string | null = null
@@ -86,6 +96,9 @@ Deno.serve(async (req) => {
           stripe_customer_id: s.customer ? String(s.customer) : null,
           stripe_subscription_id: subId,
         }).eq('id', userId)
+
+        // Bônus de 7 créditos de IA inclusos na compra do app
+        await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 7 })
 
         await registrar(event, userId, 'checkout', {
           stripe_customer_id: s.customer ? String(s.customer) : null,

@@ -7,8 +7,9 @@ const MAX_TOKENS = 400
 const MAX_HISTORY = 6
 
 export function useAI(settings = {}) {
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState(null)
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState(null)
+  const [limiteIA, setLimiteIA] = useState(false)
 
   const call = useCallback(
     async (messages, extraSystem = '') => {
@@ -24,12 +25,21 @@ export function useAI(settings = {}) {
           },
         })
 
-        if (fnError) throw new Error(fnError.message || 'Erro ao chamar IA')
+        if (fnError) {
+          // Lê o corpo do erro pra detectar créditos de IA esgotados
+          let code
+          try { code = (await fnError.context.json())?.code } catch {}
+          if (code === 'LIMITE_IA') {
+            setLimiteIA(true)
+            const e = new Error('LIMITE_IA'); e.code = 'LIMITE_IA'; throw e
+          }
+          throw new Error(fnError.message || 'Erro ao chamar IA')
+        }
         if (data?.error) throw new Error(data.error)
 
         return data.content[0].text
       } catch (e) {
-        setError(e.message)
+        if (e.code !== 'LIMITE_IA') setError(e.message)
         throw e
       } finally {
         setLoading(false)
@@ -52,5 +62,5 @@ export function useAI(settings = {}) {
     return call(messages)
   }
 
-  return { loading, error, suggestDay, optimizeDay, reflectDay, chat }
+  return { loading, error, limiteIA, clearLimiteIA: () => setLimiteIA(false), suggestDay, optimizeDay, reflectDay, chat }
 }

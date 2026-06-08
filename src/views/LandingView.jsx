@@ -18,17 +18,17 @@ export function LandingView({ onStart }) {
 
       {/* Hero */}
       <section style={{ ...section, paddingTop: 48, textAlign: 'center' }}>
-        <span style={pill}>🎁 7 dias grátis · depois R$ 37 pagamento único</span>
+        <span style={pill}>✨ R$ 37 pagamento único · acesso vitalício</span>
         <h1 style={h1}>
           Organize sua vida em pilares<br />e <span style={{ color: '#4338CA' }}>conquiste seu dia</span>
         </h1>
         <p style={lead}>
           Planeje tarefas por área da vida, receba lembretes automáticos no horário certo
-          e use IA pra montar seu dia. Tudo num app que cabe no seu bolso.
+          e use IA pra montar seu dia. Pague uma vez, use para sempre.
         </p>
-        <button onClick={onStart} style={ctaBig}>Começar grátis →</button>
+        <button onClick={onStart} style={ctaBig}>Quero o acesso vitalício →</button>
         <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 10 }}>
-          Sem cartão pra testar · pague uma vez, use pra sempre
+          Pagamento único · sem mensalidade · inclui 7 usos de IA
         </p>
 
         {/* Mockup de pilares */}
@@ -71,13 +71,13 @@ export function LandingView({ onStart }) {
             <li>✓ Planejamento diário, semanal e mensal</li>
             <li>✓ 9 categorias de vida</li>
             <li>✓ Lembretes push automáticos</li>
-            <li>✓ Assistente de IA</li>
+            <li>✓ 7 usos de IA inclusos (compre mais quando quiser)</li>
             <li>✓ Diário e progresso</li>
             <li>✓ Todas as atualizações futuras</li>
           </ul>
-          <button onClick={onStart} style={ctaBig}>Quero começar grátis →</button>
+          <button onClick={onStart} style={ctaBig}>Quero acesso vitalício →</button>
           <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 10 }}>
-            Teste 7 dias grátis. Só paga se gostar.
+            Pagamento único de R$ 37. Sem mensalidade, pra sempre.
           </p>
         </div>
       </section>
