@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { irParaCheckout } from '../hooks/useAccess.js'
+import { PixModal } from './PixModal.jsx'
 
 // Paywall. modo: 'app' (R$37 vitalício) | 'ia' (R$29,90 → 100 usos de IA).
 // `bloqueante` esconde o botão de fechar (acesso obrigatório).
-export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, modo = 'app' }) {
+export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, modo = 'app', onPaid }) {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState(null)
+  const [showPix, setShowPix] = useState(false)
   const isIA = modo === 'ia'
 
   const comprar = async () => {
@@ -64,8 +66,11 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, m
             )}
           </ul>
 
-          <button onClick={comprar} disabled={loading} style={btnPrimary}>
-            {loading ? 'Abrindo…' : (isIA ? 'Comprar 100 usos' : 'Liberar acesso vitalício')}
+          <button onClick={() => setShowPix(true)} style={btnPrimary}>
+            ⚡ Pagar com Pix
+          </button>
+          <button onClick={comprar} disabled={loading} style={btnSecondary}>
+            {loading ? 'Abrindo…' : '💳 Pagar com cartão'}
           </button>
         </div>
 
@@ -74,7 +79,7 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, m
         )}
 
         <p style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>
-          Pagamento seguro via Stripe · pix e cartão
+          Pix via Mercado Pago · cartão via Stripe · pagamento seguro
         </p>
 
         {bloqueante && onSignOut && (
@@ -86,6 +91,14 @@ export function PricingModal({ onClose, bloqueante = false, motivo, onSignOut, m
           </button>
         )}
       </div>
+
+      {showPix && (
+        <PixModal
+          produto={isIA ? 'ia_pack' : 'app'}
+          onClose={() => setShowPix(false)}
+          onPaid={() => { setShowPix(false); onPaid?.() }}
+        />
+      )}
     </div>
   )
 }
@@ -123,4 +136,9 @@ const btnPrimary = {
   width: '100%', padding: '13px', borderRadius: 10, border: 'none',
   background: '#4338CA', color: 'white', fontSize: 15, fontWeight: 700,
   cursor: 'pointer', fontFamily: 'inherit',
+}
+const btnSecondary = {
+  width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid #E0E7FF',
+  background: 'white', color: '#4338CA', fontSize: 14, fontWeight: 700,
+  cursor: 'pointer', fontFamily: 'inherit', marginTop: 8,
 }

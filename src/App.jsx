@@ -135,6 +135,7 @@ export default function App() {
         modo="app"
         motivo="Pague uma vez e use o OrvixPlan para sempre — sem mensalidade."
         onSignOut={signOut}
+        onPaid={() => access.refresh()}
       />
     )
   }
@@ -320,13 +321,18 @@ export default function App() {
       )}
 
       {showPricing && (
-        <PricingModal modo="app" onClose={() => setShowPricing(false)} />
+        <PricingModal
+          modo="app"
+          onClose={() => setShowPricing(false)}
+          onPaid={() => { setShowPricing(false); access.refresh() }}
+        />
       )}
 
       {showIAPack && (
         <PricingModal
           modo="ia"
           onClose={() => { setShowIAPack(false); ai.clearLimiteIA(); access.refresh() }}
+          onPaid={() => { setShowIAPack(false); ai.clearLimiteIA(); access.refresh() }}
         />
       )}
 
