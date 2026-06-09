@@ -44,36 +44,38 @@ Deno.serve(async (req) => {
   const [userId, produto] = String(pay.external_reference || '').split(':')
   if (!userId) return new Response('sem external_reference', { status: 200 })
 
-  // Idempotência
   const eventId = `mp:${pay.id}`
-  const { data: dup } = await supabase
-    .from('assinaturas').select('id').eq('stripe_event_id', eventId).maybeSingle()
-  if (dup) return new Response('duplicate', { status: 200 })
-
   const centavos = Math.round((pay.transaction_amount || 0) * 100)
+  const expira = new Date(); expira.setFullYear(expira.getFullYear() + 100)
+
+  // ─── Trava atômica de idempotência ──────────────────────────────────────────
+  // O MP manda a notificação várias vezes. Inserimos o registro PRIMEIRO: a
+  // constraint UNIQUE em stripe_event_id garante que só a 1ª passa. Só depois
+  // de garantir o lock é que aplicamos os créditos (sem risco de duplicar).
+  const row = produto === 'ia_pack'
+    ? { stripe_event_id: eventId, user_id: userId, tipo: 'ia_pack', valor_centavos: centavos, status: 'ativo' }
+    : { stripe_event_id: eventId, user_id: userId, tipo: 'checkout', ciclo: 'vitalicio',
+        valor_centavos: centavos, status: 'ativo',
+        periodo_inicio: new Date().toISOString(), periodo_fim: expira.toISOString() }
+
+  const { error: lockErr } = await supabase.from('assinaturas').insert(row)
+  if (lockErr) {
+    // Violação de UNIQUE = já processado por outra notificação
+    return new Response('duplicate', { status: 200 })
+  }
 
   try {
     if (produto === 'ia_pack') {
       await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 100 })
-      await supabase.from('assinaturas').insert({
-        stripe_event_id: eventId, user_id: userId, tipo: 'ia_pack',
-        valor_centavos: centavos, status: 'ativo',
-      })
     } else {
-      const expira = new Date(); expira.setFullYear(expira.getFullYear() + 100)
       await supabase.from('users').update({
         plano: 'pro', status: 'ativo', ciclo: 'vitalicio',
         acesso_expira_em: expira.toISOString(),
       }).eq('id', userId)
       await supabase.rpc('adicionar_creditos_ia', { p_user_id: userId, p_qtd: 50 })
-      await supabase.from('assinaturas').insert({
-        stripe_event_id: eventId, user_id: userId, tipo: 'checkout', ciclo: 'vitalicio',
-        valor_centavos: centavos, status: 'ativo',
-        periodo_inicio: new Date().toISOString(), periodo_fim: expira.toISOString(),
-      })
     }
   } catch (err: any) {
-    console.error('[mp-webhook] erro', err?.message)
+    console.error('[mp-webhook] erro ao aplicar', err?.message)
     return new Response('handler error', { status: 500 })
   }
 
